@@ -3,13 +3,13 @@ import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig = {
-  // Configuração será adicionada quando conectar ao Firebase
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCyI6iZg3J-MqWWhadkywU9xHUoYVklyRg",
+  authDomain: "chamada-digital-9489e.firebaseapp.com",
+  projectId: "chamada-digital-9489e",
+  storageBucket: "chamada-digital-9489e.firebasestorage.app",
+  messagingSenderId: "628094723107",
+  appId: "1:628094723107:web:d1f71ef0a1af78e9d63d96",
+  measurementId: "G-YSTWX2D8CK"
 };
 
 const app = initializeApp(firebaseConfig);
