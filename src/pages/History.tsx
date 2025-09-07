@@ -49,7 +49,7 @@ export const History: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-2">
           <HistoryIcon className="h-8 w-8 text-blue-600" />
           <div>
@@ -63,6 +63,7 @@ export const History: React.FC = () => {
         <Button
           variant="outline"
           onClick={() => setShowFilter(!showFilter)}
+          className="w-full sm:w-auto"
         >
           <Search className="h-4 w-4 mr-2" />
           Filtrar por Data
@@ -77,7 +78,7 @@ export const History: React.FC = () => {
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Data inicial</Label>
+                <Label htmlFor="startDate" className="text-sm">Data inicial</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -87,7 +88,7 @@ export const History: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="endDate">Data final</Label>
+                <Label htmlFor="endDate" className="text-sm">Data final</Label>
                 <Input
                   id="endDate"
                   type="date"
@@ -96,11 +97,12 @@ export const History: React.FC = () => {
                 />
               </div>
               
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2 sm:flex-col sm:items-stretch">
                 <Button
                   variant="outline"
                   onClick={clearFilter}
                   disabled={!startDate && !endDate}
+                  className="w-full"
                 >
                   Limpar
                 </Button>
@@ -123,7 +125,7 @@ export const History: React.FC = () => {
             }
           </p>
           {(!startDate && !endDate) && (
-            <Button onClick={() => window.location.href = '/attendance'}>
+            <Button onClick={() => window.location.href = '/attendance'} className="w-full sm:w-auto">
               Registrar Primeira Chamada
             </Button>
           )}
@@ -137,12 +139,12 @@ export const History: React.FC = () => {
             return (
               <Card key={record.id}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
                     <div className="bg-blue-50 p-2 rounded-lg">
                       <Calendar className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <CardTitle>
+                      <CardTitle className="text-base sm:text-lg">
                         {new Date(record.date).toLocaleDateString('pt-BR', {
                           weekday: 'long',
                           year: 'numeric',
@@ -150,18 +152,18 @@ export const History: React.FC = () => {
                           day: 'numeric'
                         })}
                       </CardTitle>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs sm:text-sm text-gray-600">
                         Registrado em {new Date(record.createdAt).toLocaleString('pt-BR')}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                     <div className="text-right">
-                      <div className="text-lg font-semibold">
+                      <div className="text-sm sm:text-lg font-semibold">
                         {presentCount}/{record.students.length}
                       </div>
-                      <div className="text-sm text-gray-600">presentes</div>
+                      <div className="text-xs sm:text-sm text-gray-600">presentes</div>
                     </div>
                     
                     <Badge 
@@ -174,7 +176,7 @@ export const History: React.FC = () => {
                 
                 <CardContent>
                   {record.notes && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-700">
                         <strong>Observações:</strong> {record.notes}
                       </p>
@@ -183,15 +185,15 @@ export const History: React.FC = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-medium text-green-700 mb-2 flex items-center">
+                      <h4 className="font-medium text-green-700 mb-2 flex items-center text-sm sm:text-base">
                         <Users className="h-4 w-4 mr-1" />
                         Presentes ({record.students.filter(s => s.isPresent).length})
                       </h4>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                      <div className="space-y-1 max-h-24 sm:max-h-32 overflow-y-auto">
                         {record.students
                           .filter(student => student.isPresent)
                           .map(student => (
-                            <div key={student.id} className="text-sm text-gray-700">
+                            <div key={student.id} className="text-xs sm:text-sm text-gray-700 truncate">
                               {student.name}
                             </div>
                           ))}
@@ -199,15 +201,15 @@ export const History: React.FC = () => {
                     </div>
                     
                     <div>
-                      <h4 className="font-medium text-red-700 mb-2 flex items-center">
+                      <h4 className="font-medium text-red-700 mb-2 flex items-center text-sm sm:text-base">
                         <Users className="h-4 w-4 mr-1" />
                         Ausentes ({record.students.filter(s => !s.isPresent).length})
                       </h4>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                      <div className="space-y-1 max-h-24 sm:max-h-32 overflow-y-auto">
                         {record.students
                           .filter(student => !student.isPresent)
                           .map(student => (
-                            <div key={student.id} className="text-sm text-gray-700">
+                            <div key={student.id} className="text-xs sm:text-sm text-gray-700 truncate">
                               {student.name}
                             </div>
                           ))}

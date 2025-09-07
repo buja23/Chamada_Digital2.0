@@ -56,19 +56,20 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => 
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow w-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <h3 className="font-semibold text-lg">{student.name}</h3>
-          <p className="text-sm text-gray-600">{calculateAge(student.birthdate)} anos</p>
+          <h3 className="font-semibold text-base sm:text-lg truncate">{student.name}</h3>
+          <p className="text-xs sm:text-sm text-gray-600">{calculateAge(student.birthdate)} anos</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 flex-shrink-0">
           {onEdit && (
             <Button
               variant="ghost"
-              size="sm"
+              size="sm" 
               onClick={() => onEdit(student)}
+              className="h-8 w-8 p-0"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -76,7 +77,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => 
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 h-8 w-8 p-0">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
@@ -103,17 +104,17 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => 
       </CardHeader>
       
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Faixa:</span>
+            <span className="text-xs sm:text-sm text-gray-600">Faixa:</span>
             <Badge className={getBeltColor(student.belt)}>
               {student.belt}
             </Badge>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Matrícula:</span>
-            <span className="text-sm font-medium">
+            <span className="text-xs sm:text-sm text-gray-600">Matrícula:</span>
+            <span className="text-xs sm:text-sm font-medium">
               {new Date(student.registrationDate).toLocaleDateString('pt-BR')}
             </span>
           </div>

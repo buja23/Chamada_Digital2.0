@@ -28,7 +28,7 @@ export const StudentCheckbox: React.FC<StudentCheckboxProps> = ({
   onChange,
 }) => {
   return (
-    <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+    <div className="flex items-center space-x-3 p-2 sm:p-3 rounded-lg border hover:bg-gray-50 transition-colors">
       <Checkbox
         id={student.id}
         checked={isPresent}
@@ -38,17 +38,17 @@ export const StudentCheckbox: React.FC<StudentCheckboxProps> = ({
       <div className="flex-1">
         <label
           htmlFor={student.id}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer block truncate"
         >
           {student.name}
         </label>
       </div>
       
-      <Badge className={getBeltColor(student.belt)}>
+      <Badge className={`${getBeltColor(student.belt)} text-xs flex-shrink-0`}>
         {student.belt}
       </Badge>
       
-      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+      <div className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
         isPresent 
           ? 'bg-green-100 text-green-800' 
           : 'bg-red-100 text-red-800'

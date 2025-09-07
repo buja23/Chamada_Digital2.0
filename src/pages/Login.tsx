@@ -17,16 +17,16 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="bg-blue-600 p-3 rounded-full">
+            <div className="bg-blue-600 p-2 sm:p-3 rounded-full">
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-2xl">Academia System</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">Academia System</CardTitle>
             <CardDescription>
               Faça login para acessar o sistema de gerenciamento
             </CardDescription>
@@ -60,9 +60,9 @@ export const Login: React.FC = () => {
             </Button>
           </form>
           
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600">
             <p>Versão de desenvolvimento</p>
-            <p className="text-xs mt-1">Firebase Auth será adicionado em breve</p>
+            <p className="text-xs mt-1 text-gray-500">Firebase Auth será adicionado em breve</p>
           </div>
         </CardContent>
       </Card>

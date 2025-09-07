@@ -42,7 +42,7 @@ export const Students: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-2">
           <Users className="h-8 w-8 text-blue-600" />
           <div>
@@ -53,7 +53,7 @@ export const Students: React.FC = () => {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingStudent(null)}>
+            <Button onClick={() => setEditingStudent(null)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Novo Aluno
             </Button>
@@ -102,7 +102,7 @@ export const Students: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {filteredStudents.map((student) => (
             <StudentCard
               key={student.id}
