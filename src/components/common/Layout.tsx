@@ -4,10 +4,10 @@ import { Navigation } from './Navigation';
 
 export const Layout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50 lg:pl-72">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main>
-        <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+      <main className="lg:pl-72">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-8 pt-20 lg:pt-8">
           <Outlet />
         </div>
       </main>

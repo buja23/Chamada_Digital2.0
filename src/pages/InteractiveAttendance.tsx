@@ -148,7 +148,7 @@ export const InteractiveAttendance: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 order-2 lg:order-1">
+        <div className="lg:col-span-2">
           {!isComplete ? (
             <Card className="text-center">
               <CardHeader>
@@ -170,22 +170,22 @@ export const InteractiveAttendance: React.FC = () => {
                 
                 <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
                   <Button
-                    onClick={handlePresent}
-                    size="lg"
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 w-full sm:w-auto"
-                  >
-                    <Check className="h-5 w-5 mr-2" />
-                    Presente
-                  </Button>
-                  
-                  <Button
                     onClick={handleAbsent}
                     size="lg"
                     variant="outline"
-                    className="border-red-300 text-red-600 hover:bg-red-50 px-6 sm:px-8 w-full sm:w-auto"
+                    className="border-red-300 text-red-600 hover:bg-red-50 px-6 sm:px-8 w-full sm:w-auto order-1 sm:order-1"
                   >
                     <X className="h-5 w-5 mr-2" />
                     Ausente
+                  </Button>
+                  
+                  <Button
+                    onClick={handlePresent}
+                    size="lg"
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 w-full sm:w-auto order-2 sm:order-2"
+                  >
+                    <Check className="h-5 w-5 mr-2" />
+                    Presente
                   </Button>
                 </div>
               </CardContent>
@@ -223,7 +223,8 @@ export const InteractiveAttendance: React.FC = () => {
           )}
         </div>
 
-        <div className="space-y-4 lg:space-y-6 order-1 lg:order-2">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Progresso</CardTitle>
@@ -244,6 +245,28 @@ export const InteractiveAttendance: React.FC = () => {
             </CardContent>
           </Card>
 
+        
+        {/* Mobile Bottom Section */}
+        <div className="lg:hidden space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Progresso</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Respondidos:</span>
+                <span className="font-semibold">{totalResponded}/{students.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Presentes:</span>
+                <span className="font-semibold text-green-600">{presentCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Ausentes:</span>
+                <span className="font-semibold text-red-600">{totalResponded - presentCount}</span>
+              </div>
+            </CardContent>
+          </Card>
           {totalResponded > 0 && (
             <Card>
               <CardHeader>
@@ -251,6 +274,35 @@ export const InteractiveAttendance: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+                  {students.slice(0, currentIndex + (isComplete ? 0 : 1)).map((student) => {
+                    const isPresent = attendance[student.id];
+                    return (
+                      <div key={student.id} className="flex items-center justify-between text-sm">
+                        <span className="truncate flex-1 mr-2">{student.name}</span>
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${
+                          isPresent === undefined 
+                            ? 'bg-gray-100 text-gray-600'
+                            : isPresent 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                        }`}>
+                          {isPresent === undefined ? 'Pendente' : isPresent ? 'Presente' : 'Ausente'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+          {totalResponded > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Resumo Atual</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
                   {students.slice(0, currentIndex + (isComplete ? 0 : 1)).map((student) => {
                     const isPresent = attendance[student.id];
                     return (

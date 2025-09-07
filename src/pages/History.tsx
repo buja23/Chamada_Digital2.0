@@ -63,7 +63,6 @@ export const History: React.FC = () => {
         <Button
           variant="outline"
           onClick={() => setShowFilter(!showFilter)}
-          className="w-full sm:w-auto"
         >
           <Search className="h-4 w-4 mr-2" />
           Filtrar por Data
