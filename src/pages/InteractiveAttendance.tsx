@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useStudents } from '@/hooks/useStudents';
 import { useCreateAttendance } from '@/hooks/useAttendance';
-import { StudentAttendance } from '@/types';
 import { MousePointerClick, Check, X, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

@@ -17,7 +17,7 @@ export const generateAttendancePDF = (attendanceRecords: AttendanceRecord[]) => 
 
   let yPosition = 50;
 
-  attendanceRecords.forEach((record, index) => {
+  attendanceRecords.forEach((record) => {
     // Check if we need a new page
     if (yPosition > 250) {
       doc.addPage();

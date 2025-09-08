@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StudentCheckbox } from '@/components/attendance/StudentCheckbox';
 import { useStudents } from '@/hooks/useStudents';
 import { useCreateAttendance } from '@/hooks/useAttendance';
-import { StudentAttendance } from '@/types';
 import { ClipboardCheck, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

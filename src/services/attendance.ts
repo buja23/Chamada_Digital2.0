@@ -5,7 +5,6 @@ import {
   query, 
   orderBy,
   where,
-  Timestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { AttendanceRecord, CreateAttendanceData } from '@/types';
