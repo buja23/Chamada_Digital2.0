@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ThemeToggle } from './ThemeToggle';
 import { 
   Users, 
   ClipboardCheck, 
@@ -31,8 +32,8 @@ export const Navigation: React.FC = () => {
     <div className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center border-b border-gray-200 px-4">
         <div className="flex items-center space-x-2">
-          <GraduationCap className="h-6 w-6 text-blue-600" />
-          <h1 className="text-lg font-bold text-gray-900">Academia System</h1>
+          <GraduationCap className="h-6 w-6 text-red-600" />
+          <h1 className="text-lg font-bold">Academia System</h1>
         </div>
       </div>
       
@@ -50,14 +51,14 @@ export const Navigation: React.FC = () => {
                       className={cn(
                         'group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 transition-colors',
                         isActive
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+                          ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-red-400'
                       )}
                     >
                       <item.icon
                         className={cn(
                           'h-5 w-5 shrink-0',
-                          isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600'
+                          isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400'
                         )}
                       />
                       {item.name}
@@ -69,10 +70,15 @@ export const Navigation: React.FC = () => {
           </li>
           
           <li className="mt-auto">
-            <button className="group flex w-full gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-              <LogOut className="h-5 w-5 shrink-0 text-gray-400 group-hover:text-blue-600" />
+            <div className="space-y-2">
+              <div className="flex justify-center">
+                <ThemeToggle />
+              </div>
+              <button className="group flex w-full gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-red-400">
+                <LogOut className="h-5 w-5 shrink-0 text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400" />
               Sair
             </button>
+            </div>
           </li>
         </ul>
       </nav>
@@ -92,6 +98,7 @@ export const Navigation: React.FC = () => {
       <div className="lg:hidden">
         {/* Mobile Header */}
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm dark:bg-gray-900 dark:border-gray-800">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="lg:hidden">
@@ -105,8 +112,12 @@ export const Navigation: React.FC = () => {
           </Sheet>
           
           <div className="flex items-center space-x-2">
-            <GraduationCap className="h-6 w-6 text-blue-600" />
-            <h1 className="text-lg font-bold text-gray-900">Academia System</h1>
+            <GraduationCap className="h-6 w-6 text-red-600" />
+            <h1 className="text-lg font-bold">Academia System</h1>
+          </div>
+          
+          <div className="ml-auto">
+            <ThemeToggle />
           </div>
         </div>
       </div>

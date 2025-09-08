@@ -63,10 +63,10 @@ export const Attendance: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2">
-        <ClipboardCheck className="h-8 w-8 text-blue-600" />
+        <ClipboardCheck className="h-8 w-8 text-red-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Chamada</h1>
-          <p className="text-gray-600">Registre a presença dos alunos</p>
+          <h1 className="text-3xl font-bold">Chamada</h1>
+          <p className="text-gray-600 dark:text-gray-400">Registre a presença dos alunos</p>
         </div>
       </div>
 

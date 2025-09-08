@@ -24,10 +24,12 @@ interface StudentFormProps {
 
 const beltOptions = [
   'Branca',
+  'Cinza',
   'Amarela',
   'Laranja',
   'Verde',
   'Azul',
+  'Roxa',
   'Marrom',
   'Preta'
 ];

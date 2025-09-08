@@ -11,13 +11,15 @@ interface StudentCheckboxProps {
 
 const getBeltColor = (belt: string) => {
   const colors: Record<string, string> = {
-    'branca': 'bg-gray-100 text-gray-800',
+    'branca': 'bg-white text-gray-900 border border-gray-300',
+    'cinza': 'bg-gray-500 text-white',
     'amarela': 'bg-yellow-100 text-yellow-800',
     'laranja': 'bg-orange-100 text-orange-800',
     'verde': 'bg-green-100 text-green-800',
     'azul': 'bg-blue-100 text-blue-800',
-    'marrom': 'bg-amber-100 text-amber-800',
-    'preta': 'bg-gray-800 text-white',
+    'roxa': 'bg-purple-500 text-white',
+    'marrom': 'bg-amber-700 text-white',
+    'preta': 'bg-black text-white',
   };
   return colors[belt.toLowerCase()] || 'bg-gray-100 text-gray-800';
 };

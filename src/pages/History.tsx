@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAttendance, useAttendanceByDateRange } from '@/hooks/useAttendance';
-import { History as HistoryIcon, Calendar, Users, Search } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Users, Search, Download } from 'lucide-react';
+import { generateAttendancePDF } from '@/services/pdfService';
 
 export const History: React.FC = () => {
   const [startDate, setStartDate] = useState('');
@@ -31,6 +32,13 @@ export const History: React.FC = () => {
     setEndDate('');
   };
 
+  const handleDownloadPDF = () => {
+    if (attendanceData.length === 0) {
+      return;
+    }
+    generateAttendancePDF(attendanceData);
+  };
+
   const getAttendanceRate = (students: any[]) => {
     const presentCount = students.filter(s => s.isPresent).length;
     return students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0;
@@ -51,22 +59,32 @@ export const History: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-2">
-          <HistoryIcon className="h-8 w-8 text-blue-600" />
+          <HistoryIcon className="h-8 w-8 text-red-600" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Histórico de Chamadas</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold">Histórico de Chamadas</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               {attendanceData.length} registros encontrados
             </p>
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={() => setShowFilter(!showFilter)}
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Filtrar por Data
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleDownloadPDF}
+            disabled={attendanceData.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Baixar PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilter(!showFilter)}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Filtrar por Data
+          </Button>
+        </div>
       </div>
 
       {showFilter && (
