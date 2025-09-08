@@ -7,10 +7,10 @@ export const Register: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2">
-        <UserPlus className="h-8 w-8 text-blue-600" />
+        <UserPlus className="h-8 w-8 text-red-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Cadastrar Novo Aluno</h1>
-          <p className="text-gray-600">Adicione um novo aluno ao sistema</p>
+          <h1 className="text-3xl font-bold">Cadastrar Novo Aluno</h1>
+          <p className="text-gray-600 dark:text-gray-400">Adicione um novo aluno ao sistema</p>
         </div>
       </div>
 
