@@ -12,7 +12,6 @@ import {
   LogOut,
   GraduationCap,
   Menu,
-  X
 } from 'lucide-react';
 
 const navigation = [
