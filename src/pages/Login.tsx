@@ -60,7 +60,6 @@ export const Login: React.FC = () => {
             </Button>
           </form>
           
-          <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600">
           <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             <p>Versão de desenvolvimento</p>
             <p className="text-xs mt-1 text-gray-500">Firebase Auth será adicionado em breve</p>
@@ -70,5 +69,3 @@ export const Login: React.FC = () => {
     </div>
   );
 };
-  )
-}

@@ -12,7 +12,7 @@ export const InteractiveAttendance: React.FC = () => {
   const navigate = useNavigate();
   const { data: students = [], isLoading } = useStudents();
   const createAttendance = useCreateAttendance();
-  
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
   const [isComplete, setIsComplete] = useState(false);
@@ -119,12 +119,12 @@ export const InteractiveAttendance: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <MousePointerClick className="h-8 w-8 text-red-600" />
+          <MousePointerClick className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold">Chamada Interativa</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {isComplete 
-                ? 'Chamada concluída!' 
+            <h1 className="text-3xl font-bold text-gray-900">Chamada Interativa</h1>
+            <p className="text-gray-600">
+              {isComplete
+                ? 'Chamada concluída!'
                 : `Aluno ${currentIndex + 1} de ${students.length}`
               }
             </p>
@@ -140,11 +140,11 @@ export const InteractiveAttendance: React.FC = () => {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-        <div 
-          className="bg-red-600 h-2 rounded-full transition-all duration-300"
-          style={{ 
-            width: `${((currentIndex + (isComplete ? 1 : 0)) / students.length) * 100}%` 
+      <div className="bg-gray-200 rounded-full h-2">
+        <div
+          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          style={{
+            width: `${((currentIndex + (isComplete ? 1 : 0)) / students.length) * 100}%`
           }}
         />
       </div>
@@ -154,8 +154,8 @@ export const InteractiveAttendance: React.FC = () => {
           {!isComplete ? (
             <Card className="text-center">
               <CardHeader>
-                <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-2xl sm:text-3xl font-bold text-red-600">
+                <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {currentStudent?.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -166,10 +166,10 @@ export const InteractiveAttendance: React.FC = () => {
                   </Badge>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4 sm:space-y-6 px-4">
-                <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Este aluno está presente?</p>
-                
+                <p className="text-gray-600 text-sm sm:text-base">Este aluno está presente?</p>
+
                 <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
                   <Button
                     onClick={handleAbsent}
@@ -180,11 +180,11 @@ export const InteractiveAttendance: React.FC = () => {
                     <X className="h-5 w-5 mr-2" />
                     Ausente
                   </Button>
-                  
+
                   <Button
                     onClick={handlePresent}
                     size="lg"
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto order-2 sm:order-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 w-full sm:w-auto order-2 sm:order-2"
                   >
                     <Check className="h-5 w-5 mr-2" />
                     Presente
@@ -195,27 +195,27 @@ export const InteractiveAttendance: React.FC = () => {
           ) : (
             <Card className="text-center">
               <CardContent className="pt-6 pb-6 sm:pt-8 sm:pb-8 px-4">
-                <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
-                  <Check className="h-8 w-8 text-red-600" />
+                <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <Check className="h-8 w-8 text-green-600" />
                 </div>
-                
-                <h2 className="text-xl sm:text-2xl font-bold mb-2">
+
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Chamada Concluída!
                 </h2>
-                
-                <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
+
+                <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                   Todas as presenças foram registradas com sucesso.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-                  <Button 
-                    onClick={handleFinish} 
+                  <Button
+                    onClick={handleFinish}
                     disabled={createAttendance.isPending}
                     className="w-full sm:w-auto"
                   >
                     {createAttendance.isPending ? 'Salvando...' : 'Finalizar e Salvar'}
                   </Button>
-                  
+
                   <Button variant="outline" onClick={reset} className="w-full sm:w-auto">
                     Refazer Chamada
                   </Button>
@@ -238,66 +238,65 @@ export const InteractiveAttendance: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Presentes:</span>
-                <span className="font-semibold text-red-600">{presentCount}</span>
+                <span className="font-semibold text-green-600">{presentCount}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Ausentes:</span>
-                <span className="font-semibold text-gray-600">{totalResponded - presentCount}</span>
+                <span className="font-semibold text-red-600">{totalResponded - presentCount}</span>
               </div>
             </CardContent>
           </Card>
 
-        
-        {/* Mobile Bottom Section */}
-        <div className="lg:hidden space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Progresso</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Respondidos:</span>
-                <span className="font-semibold">{totalResponded}/{students.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Presentes:</span>
-                <span className="font-semibold text-red-600">{presentCount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Ausentes:</span>
-                <span className="font-semibold text-gray-600">{totalResponded - presentCount}</span>
-              </div>
-            </CardContent>
-          </Card>
-          {totalResponded > 0 && (
+
+          {/* Mobile Bottom Section */}
+          <div className="lg:hidden space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Resumo Atual</CardTitle>
+                <CardTitle className="text-lg">Progresso</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
-                  {students.slice(0, currentIndex + (isComplete ? 0 : 1)).map((student) => {
-                    const isPresent = attendance[student.id];
-                    return (
-                      <div key={student.id} className="flex items-center justify-between text-sm">
-                        <span className="truncate flex-1 mr-2">{student.name}</span>
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          isPresent === undefined 
-                            ? 'bg-gray-100 text-gray-600'
-                            : isPresent 
-                              ? 'bg-red-100 text-red-800' 
-                              : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {isPresent === undefined ? 'Pendente' : isPresent ? 'Presente' : 'Ausente'}
-                        </div>
-                      </div>
-                    );
-                  })}
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Respondidos:</span>
+                  <span className="font-semibold">{totalResponded}/{students.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Presentes:</span>
+                  <span className="font-semibold text-green-600">{presentCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Ausentes:</span>
+                  <span className="font-semibold text-red-600">{totalResponded - presentCount}</span>
                 </div>
               </CardContent>
             </Card>
-          )}
-        </div>
+            {totalResponded > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Resumo Atual</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+                    {students.slice(0, currentIndex + (isComplete ? 0 : 1)).map((student) => {
+                      const isPresent = attendance[student.id];
+                      return (
+                        <div key={student.id} className="flex items-center justify-between text-sm">
+                          <span className="truncate flex-1 mr-2">{student.name}</span>
+                          <div className={`px-2 py-1 rounded text-xs font-medium ${isPresent === undefined
+                              ? 'bg-gray-100 text-gray-600'
+                              : isPresent
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                            {isPresent === undefined ? 'Pendente' : isPresent ? 'Presente' : 'Ausente'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
           {totalResponded > 0 && (
             <Card>
               <CardHeader>
@@ -310,13 +309,12 @@ export const InteractiveAttendance: React.FC = () => {
                     return (
                       <div key={student.id} className="flex items-center justify-between text-sm">
                         <span className="truncate flex-1 mr-2">{student.name}</span>
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          isPresent === undefined 
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${isPresent === undefined
                             ? 'bg-gray-100 text-gray-600'
-                            : isPresent 
-                              ? 'bg-red-100 text-red-800' 
-                              : 'bg-gray-100 text-gray-800'
-                        }`}>
+                            : isPresent
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
                           {isPresent === undefined ? 'Pendente' : isPresent ? 'Presente' : 'Ausente'}
                         </div>
                       </div>
