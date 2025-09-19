@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAttendance, useAttendanceByDateRange } from '@/hooks/useAttendance';
 import { useStudents } from '@/hooks/useStudents';
-import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User, BarChart3 } from 'lucide-react';
 import { generateAttendancePDF } from '@/services/pdfService';
 
 export const History: React.FC = () => {
@@ -184,7 +184,7 @@ export const History: React.FC = () => {
       )}
 
       <Tabs defaultValue="history" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <span className="hidden sm:inline">Histórico de</span> Chamadas
@@ -192,6 +192,10 @@ export const History: React.FC = () => {
           <TabsTrigger value="stats" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Estatísticas</span> Individuais
+          </TabsTrigger>
+          <TabsTrigger value="monthly" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Estatísticas</span> Mensais
           </TabsTrigger>
         </TabsList>
 
@@ -400,7 +404,223 @@ export const History: React.FC = () => {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="monthly" className="space-y-6">
+          <MonthlyStats attendanceData={attendanceData} students={students} />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+};
+
+// Componente de Estatísticas Mensais
+const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ attendanceData, students }) => {
+  const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
+  
+  // Agrupar dados por mês
+  const getMonthlyData = () => {
+    const monthlyData: Record<string, any> = {};
+    
+    attendanceData.forEach(record => {
+      const date = new Date(record.date);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      
+      if (year === selectedYear) {
+        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+        
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = {
+            month: month,
+            year: year,
+            records: [],
+            totalClasses: 0,
+            totalPresent: 0,
+            totalAbsent: 0,
+            attendanceRate: 0,
+            days: []
+          };
+        }
+        
+        monthlyData[monthKey].records.push(record);
+        monthlyData[monthKey].totalClasses++;
+        monthlyData[monthKey].totalPresent += record.students.filter((s: any) => s.isPresent).length;
+        monthlyData[monthKey].totalAbsent += record.students.filter((s: any) => !s.isPresent).length;
+        monthlyData[monthKey].days.push(date.getDate());
+      }
+    });
+    
+    // Calcular taxa de presença
+    Object.keys(monthlyData).forEach(key => {
+      const data = monthlyData[key];
+      const totalStudentDays = data.totalPresent + data.totalAbsent;
+      data.attendanceRate = totalStudentDays > 0 ? Math.round((data.totalPresent / totalStudentDays) * 100) : 0;
+      data.days.sort((a: number, b: number) => a - b);
+    });
+    
+    return monthlyData;
+  };
+  
+  const monthlyData = getMonthlyData();
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+  
+  const availableYears = [...new Set(attendanceData.map(record => new Date(record.date).getFullYear()))].sort((a, b) => b - a);
+  
+  if (attendanceData.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+          Nenhum dado disponível
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Registre algumas chamadas para ver as estatísticas mensais.
+        </p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-6">
+      {/* Seletor de Ano */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          Estatísticas de {selectedYear}
+        </h2>
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        >
+          {availableYears.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+      
+      {/* Grid de Meses */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {months.map((monthName, monthIndex) => {
+          const monthKey = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}`;
+          const data = monthlyData[monthKey];
+          
+          return (
+            <Card key={monthIndex} className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span className="text-gray-900 dark:text-gray-100">{monthName}</span>
+                  {data && (
+                    <Badge 
+                      variant={data.attendanceRate >= 80 ? "default" : data.attendanceRate >= 60 ? "secondary" : "destructive"}
+                      className="text-xs"
+                    >
+                      {data.attendanceRate}%
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent>
+                {data ? (
+                  <div className="space-y-4">
+                    {/* Estatísticas do Mês */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                          {data.totalClasses}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Aulas</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                          {data.totalPresent}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Presenças</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                          {data.totalAbsent}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Faltas</div>
+                      </div>
+                    </div>
+                    
+                    {/* Barra de Progresso */}
+                    <div>
+                      <Progress value={data.attendanceRate} className="h-2" />
+                    </div>
+                    
+                    {/* Dias com Aula */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        Dias com aula:
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {data.days.map((day: number, index: number) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full"
+                          >
+                            {day}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="text-gray-400 dark:text-gray-500 text-sm">
+                      Nenhuma aula registrada
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      
+      {/* Resumo Anual */}
+      {Object.keys(monthlyData).length > 0 && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-gray-100">
+              Resumo Anual de {selectedYear}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  {Object.values(monthlyData).reduce((acc: number, month: any) => acc + month.totalClasses, 0)}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total de Aulas</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {Object.values(monthlyData).reduce((acc: number, month: any) => acc + month.totalPresent, 0)}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total de Presenças</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                  {Object.values(monthlyData).reduce((acc: number, month: any) => acc + month.totalAbsent, 0)}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total de Faltas</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {Object.keys(monthlyData).length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Meses Ativos</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
