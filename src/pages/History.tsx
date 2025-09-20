@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAttendance, useAttendanceByDateRange } from '@/hooks/useAttendance';
 import { useStudents } from '@/hooks/useStudents';
-import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User, BarChart3 } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User, BarChart3, FileDown } from 'lucide-react';
 import { generateAttendancePDF } from '@/services/pdfService';
+import { generateMonthlyPDF } from '@/services/monthlyPdfService';
 
 export const History: React.FC = () => {
   const [startDate, setStartDate] = useState('');
@@ -416,6 +417,7 @@ export const History: React.FC = () => {
 // Componente de Estatísticas Mensais
 const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ attendanceData, students }) => {
   const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = React.useState<number | null>(null);
   
   // Agrupar dados por mês
   const getMonthlyData = () => {
@@ -461,6 +463,78 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
     return monthlyData;
   };
   
+  // Obter estatísticas de alunos por mês
+  const getMonthlyStudentStats = (monthIndex: number) => {
+    const monthKey = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}`;
+    const monthData = getMonthlyData()[monthKey];
+    
+    if (!monthData) return [];
+    
+    const studentStats = students.map(student => {
+      let totalClasses = 0;
+      let presentClasses = 0;
+      const attendanceDays: { day: number, isPresent: boolean }[] = [];
+      
+      monthData.records.forEach((record: any) => {
+        const studentAttendance = record.students.find((s: any) => s.id === student.id);
+        if (studentAttendance) {
+          totalClasses++;
+          const day = new Date(record.date).getDate();
+          attendanceDays.push({ day, isPresent: studentAttendance.isPresent });
+          if (studentAttendance.isPresent) {
+            presentClasses++;
+          }
+        }
+      });
+      
+      const attendanceRate = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
+      
+      return {
+        ...student,
+        totalClasses,
+        presentClasses,
+        absentClasses: totalClasses - presentClasses,
+        attendanceRate,
+        attendanceDays: attendanceDays.sort((a, b) => a.day - b.day)
+      };
+    }).filter(student => student.totalClasses > 0)
+      .sort((a, b) => b.attendanceRate - a.attendanceRate);
+    
+    return studentStats;
+  };
+  
+  const handleDownloadMonthlyPDF = (monthIndex: number) => {
+    const monthName = months[monthIndex];
+    const studentStats = getMonthlyStudentStats(monthIndex);
+    const monthData = getMonthlyData()[`${selectedYear}-${monthIndex.toString().padStart(2, '0')}`];
+    
+    if (!monthData || studentStats.length === 0) {
+      return;
+    }
+    
+    generateMonthlyPDF({
+      month: monthName,
+      year: selectedYear,
+      studentStats,
+      monthData
+    });
+  };
+  
+  const getBeltColor = (belt: string) => {
+    const colors: Record<string, string> = {
+      'branca': 'bg-white text-gray-900 border border-gray-300',
+      'cinza': 'bg-gray-500 text-white',
+      'amarela': 'bg-yellow-100 text-yellow-800',
+      'laranja': 'bg-orange-100 text-orange-800',
+      'verde': 'bg-green-100 text-green-800',
+      'azul': 'bg-blue-100 text-blue-800',
+      'roxa': 'bg-purple-500 text-white',
+      'marrom': 'bg-amber-700 text-white',
+      'preta': 'bg-black text-white',
+    };
+    return colors[belt.toLowerCase()] || 'bg-gray-100 text-gray-800';
+  };
+  
   const monthlyData = getMonthlyData();
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -485,6 +559,23 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
   
   return (
     <div className="space-y-6">
+      {/* Modal de detalhes do mês */}
+      {selectedMonth !== null && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <MonthDetailModal 
+              month={months[selectedMonth]}
+              year={selectedYear}
+              studentStats={getMonthlyStudentStats(selectedMonth)}
+              monthData={getMonthlyData()[`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`]}
+              onClose={() => setSelectedMonth(null)}
+              onDownloadPDF={() => handleDownloadMonthlyPDF(selectedMonth)}
+              getBeltColor={getBeltColor}
+            />
+          </div>
+        </div>
+      )}
+      
       {/* Seletor de Ano */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -508,17 +599,34 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
           const data = monthlyData[monthKey];
           
           return (
-            <Card key={monthIndex} className="dark:bg-gray-800 dark:border-gray-700">
+            <Card 
+              key={monthIndex} 
+              className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => data && setSelectedMonth(monthIndex)}
+            >
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="text-gray-900 dark:text-gray-100">{monthName}</span>
                   {data && (
-                    <Badge 
-                      variant={data.attendanceRate >= 80 ? "default" : data.attendanceRate >= 60 ? "secondary" : "destructive"}
-                      className="text-xs"
-                    >
-                      {data.attendanceRate}%
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge 
+                        variant={data.attendanceRate >= 80 ? "default" : data.attendanceRate >= 60 ? "secondary" : "destructive"}
+                        className="text-xs"
+                      >
+                        {data.attendanceRate}%
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadMonthlyPDF(monthIndex);
+                        }}
+                        className="h-6 w-6 p-0"
+                      >
+                        <FileDown className="h-3 w-3" />
+                      </Button>
+                    </div>
                   )}
                 </CardTitle>
               </CardHeader>
@@ -621,6 +729,156 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+};
+
+// Componente Modal de Detalhes do Mês
+const MonthDetailModal: React.FC<{
+  month: string;
+  year: number;
+  studentStats: any[];
+  monthData: any;
+  onClose: () => void;
+  onDownloadPDF: () => void;
+  getBeltColor: (belt: string) => string;
+}> = ({ month, year, studentStats, monthData, onClose, onDownloadPDF, getBeltColor }) => {
+  
+  if (!monthData || studentStats.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {month} {year}
+          </h2>
+          <Button variant="ghost" onClick={onClose}>
+            ✕
+          </Button>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400">Nenhum dado disponível para este mês.</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {month} {year}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            {monthData.totalClasses} aulas • {monthData.totalPresent} presenças • {monthData.totalAbsent} faltas
+          </p>
+        </div>
+        <div className="flex space-x-2">
+          <Button onClick={onDownloadPDF} className="flex items-center space-x-2">
+            <FileDown className="h-4 w-4" />
+            <span>Baixar PDF</span>
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            ✕
+          </Button>
+        </div>
+      </div>
+      
+      {/* Resumo do Mês */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+            {monthData.totalClasses}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Total de Aulas</div>
+        </div>
+        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {monthData.totalPresent}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Presenças</div>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+            {monthData.totalAbsent}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Faltas</div>
+        </div>
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {monthData.attendanceRate}%
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Taxa de Presença</div>
+        </div>
+      </div>
+      
+      {/* Ranking de Alunos */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Ranking de Presença dos Alunos
+        </h3>
+        
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {studentStats.map((student, index) => (
+            <Card key={student.id} className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                {/* Info do Aluno */}
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center text-sm font-bold text-red-600 dark:text-red-400">
+                      {index + 1}
+                    </div>
+                    <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-red-600 dark:text-red-400">
+                        {student.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                      {student.name}
+                    </h4>
+                    <Badge className={`${getBeltColor(student.belt)} text-xs`}>
+                      {student.belt}
+                    </Badge>
+                  </div>
+                </div>
+                
+                {/* Estatísticas */}
+                <div className="flex flex-col sm:items-end space-y-2">
+                  <div className="flex items-center space-x-4 text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {student.presentClasses}/{student.totalClasses} aulas
+                    </span>
+                    <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                      {student.attendanceRate}%
+                    </div>
+                  </div>
+                  <Progress value={student.attendanceRate} className="w-32 h-2" />
+                </div>
+              </div>
+              
+              {/* Dias de Presença */}
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex flex-wrap gap-1">
+                  {student.attendanceDays.map((attendance: any, dayIndex: number) => (
+                    <div
+                      key={dayIndex}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                        attendance.isPresent
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      }`}
+                      title={`Dia ${attendance.day}: ${attendance.isPresent ? 'Presente' : 'Ausente'}`}
+                    >
+                      {attendance.day}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
