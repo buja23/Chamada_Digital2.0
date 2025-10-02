@@ -79,7 +79,7 @@ export const generateMonthlyPDF = (data: MonthlyPDFData) => {
   };
   
   // Colunas dos dias (dinâmicas)
-  data.monthData.days.forEach((day: number, index: number) => {
+  data.monthData.days.forEach((_day: number, index: number) => {
     columnStyles[3 + index] = { cellWidth: 8, halign: 'center', fontSize: 8 };
   });
   

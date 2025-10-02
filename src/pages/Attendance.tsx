@@ -38,7 +38,7 @@ export const Attendance: React.FC = () => {
     await createAttendance.mutateAsync({
       date: selectedDate,
       students: attendanceData,
-      notes: notes.trim() || undefined
+      notes: notes.trim() || ""
     });
 
     // Redirecionar para histórico
