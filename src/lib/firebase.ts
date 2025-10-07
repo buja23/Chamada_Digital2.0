@@ -3,14 +3,15 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth} from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCyI6iZg3J-MqWWhadkywU9xHUoYVklyRg",
-  authDomain: "chamada-digital-9489e.firebaseapp.com",
-  projectId: "chamada-digital-9489e",
-  storageBucket: "chamada-digital-9489e.firebasestorage.app",
-  messagingSenderId: "628094723107",
-  appId: "1:628094723107:web:d1f71ef0a1af78e9d63d96",
-  measurementId: "G-YSTWX2D8CK"
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID
 };
+
 
 const app = initializeApp(firebaseConfig);
 
