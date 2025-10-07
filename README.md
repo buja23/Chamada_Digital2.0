@@ -37,110 +37,17 @@ Um sistema completo para gerenciamento de alunos e registro de chamadas, desenvo
 - **Firebase Auth** (autenticação - implementação futura)
 - **Regras de segurança** configuráveis por ambiente
 
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── components/           # Componentes reutilizáveis
-│   ├── ui/              # Componentes shadcn/ui
-│   ├── common/          # Layout e navegação
-│   ├── students/        # Componentes de alunos
-│   └── attendance/      # Componentes de chamada
-├── pages/               # Páginas da aplicação
-├── hooks/               # Custom hooks para React Query
-├── services/            # Serviços do Firebase
-├── types/               # Tipos TypeScript
-├── lib/                 # Utilitários e configurações
-└── App.tsx             # Componente raiz
-```
-
-## 🗄 Estrutura do Banco de Dados
-
-### Coleção `students`
-```typescript
-{
-  id: string;
-  name: string;
-  birthdate: string;        // ISO date
-  belt: string;             // Faixa/graduação
-  registrationDate: string; // ISO date
-}
-```
-
-### Coleção `attendance`
-```typescript
-{
-  id: string;
-  date: string;            // YYYY-MM-DD
-  students: [
-    {
-      id: string;
-      name: string;
-      isPresent: boolean;
-    }
-  ];
-  notes?: string;          // Observações opcionais
-  createdAt: string;       // ISO timestamp
-}
-```
-
-## 🚦 Como Executar
 
 ### 1. Instalar dependências
 ```bash
 npm install
 ```
 
-### 2. Configurar Firebase
-1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
-2. Ative o Firestore Database
-3. Configure as regras de segurança:
-
-**Desenvolvimento:**
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
-
-**Produção (futuro):**
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
-
-4. Copie as credenciais e atualize `src/lib/firebase.ts`:
-```typescript
-const firebaseConfig = {
-  apiKey: "sua-api-key",
-  authDomain: "seu-projeto.firebaseapp.com",
-  projectId: "seu-project-id",
-  storageBucket: "seu-projeto.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "seu-app-id"
-};
-```
-
-### 3. Executar em desenvolvimento
+### 2. Executar em desenvolvimento
 ```bash
 npm run dev
 ```
 
-### 4. Build para produção
-```bash
-npm run build
-```
 
 ## 📱 Páginas da Aplicação
 
@@ -171,8 +78,6 @@ npm run build
 ## 🔮 Próximas Implementações
 
 - [ ] **Firebase Authentication** completo (Google, Email/Senha)
-- [ ] **Relatórios avançados** (frequência por aluno, estatísticas)
-- [ ] **Exportação** de dados (PDF, Excel)
 - [ ] **Notificações** para alunos faltosos
 - [ ] **Dashboard** com gráficos e métricas
 - [ ] **Modo offline** com sincronização automática
