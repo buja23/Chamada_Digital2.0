@@ -18,14 +18,14 @@ export const History: React.FC = () => {
   const [showFilter, setShowFilter] = useState(false);
 
   // Use filtered query if dates are provided, otherwise use all attendance
-  const { 
-    data: filteredAttendance, 
-    isLoading: isFilterLoading 
+  const {
+    data: filteredAttendance,
+    isLoading: isFilterLoading
   } = useAttendanceByDateRange(startDate, endDate);
-  
-  const { 
-    data: allAttendance = [], 
-    isLoading: isAllLoading 
+
+  const {
+    data: allAttendance = [],
+    isLoading: isAllLoading
   } = useAttendance();
 
   const { data: students = [] } = useStudents();
@@ -55,7 +55,7 @@ export const History: React.FC = () => {
     const stats = students.map(student => {
       let totalClasses = 0;
       let presentClasses = 0;
-      
+
       attendanceData.forEach(record => {
         const studentAttendance = record.students.find(s => s.id === student.id);
         if (studentAttendance) {
@@ -65,10 +65,10 @@ export const History: React.FC = () => {
           }
         }
       });
-      
+
       const attendanceRate = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
       const absentClasses = totalClasses - presentClasses;
-      
+
       return {
         ...student,
         totalClasses,
@@ -77,7 +77,7 @@ export const History: React.FC = () => {
         attendanceRate
       };
     });
-    
+
     // Ordenar por taxa de presença (maior para menor)
     return stats.sort((a, b) => b.attendanceRate - a.attendanceRate);
   };
@@ -158,7 +158,7 @@ export const History: React.FC = () => {
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="endDate" className="text-sm">Data final</Label>
                 <Input
@@ -168,7 +168,7 @@ export const History: React.FC = () => {
                   onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
-              
+
               <div className="flex items-end gap-2 sm:flex-col sm:items-stretch">
                 <Button
                   variant="outline"
@@ -208,7 +208,7 @@ export const History: React.FC = () => {
                 Nenhum registro encontrado
               </h3>
               <p className="text-gray-600 mb-4">
-                {(startDate && endDate) 
+                {(startDate && endDate)
                   ? 'Não há chamadas no período selecionado.'
                   : 'Ainda não foram registradas chamadas.'
                 }
@@ -224,7 +224,7 @@ export const History: React.FC = () => {
               {attendanceData.map((record) => {
                 const attendanceRate = getAttendanceRate(record.students);
                 const presentCount = record.students.filter(s => s.isPresent).length;
-                
+
                 return (
                   <Card key={record.id}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -238,7 +238,8 @@ export const History: React.FC = () => {
                               weekday: 'long',
                               year: 'numeric',
                               month: 'long',
-                              day: 'numeric'
+                              day: 'numeric',
+                              timeZone: 'UTC'
                             })}
                           </CardTitle>
                           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -246,7 +247,7 @@ export const History: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                         <div className="text-right">
                           <div className="text-sm sm:text-lg font-semibold">
@@ -254,15 +255,15 @@ export const History: React.FC = () => {
                           </div>
                           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">presentes</div>
                         </div>
-                        
-                        <Badge 
+
+                        <Badge
                           variant={attendanceRate >= 80 ? "default" : attendanceRate >= 60 ? "secondary" : "destructive"}
                         >
                           {attendanceRate}%
                         </Badge>
                       </div>
                     </CardHeader>
-                    
+
                     <CardContent>
                       {record.notes && (
                         <div className="mb-4 p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -271,7 +272,7 @@ export const History: React.FC = () => {
                           </p>
                         </div>
                       )}
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 flex items-center text-sm sm:text-base">
@@ -288,7 +289,7 @@ export const History: React.FC = () => {
                               ))}
                           </div>
                         </div>
-                        
+
                         <div>
                           <h4 className="font-medium text-gray-700 dark:text-gray-400 mb-2 flex items-center text-sm sm:text-base">
                             <Users className="h-4 w-4 mr-1" />
@@ -340,7 +341,7 @@ export const History: React.FC = () => {
                               {student.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-base sm:text-lg truncate">{student.name}</h3>
                             <div className="flex items-center space-x-2 mt-1">
@@ -350,7 +351,7 @@ export const History: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col sm:items-end space-y-2">
                           <div className="flex items-center space-x-4">
                             <div className="text-center">
@@ -360,16 +361,16 @@ export const History: React.FC = () => {
                               <div className="text-xs text-gray-600 dark:text-gray-400">presença</div>
                             </div>
                           </div>
-                          
+
                           <div className="w-full sm:w-48">
-                            <Progress 
-                              value={student.attendanceRate} 
+                            <Progress
+                              value={student.attendanceRate}
                               className="h-2"
                             />
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                         <div className="text-center">
                           <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -379,7 +380,7 @@ export const History: React.FC = () => {
                             Total de Aulas
                           </div>
                         </div>
-                        
+
                         <div className="text-center">
                           <div className="text-lg sm:text-xl font-semibold text-red-600">
                             {student.presentClasses}
@@ -388,7 +389,7 @@ export const History: React.FC = () => {
                             Presenças
                           </div>
                         </div>
-                        
+
                         <div className="text-center">
                           <div className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-400">
                             {student.absentClasses}
@@ -418,19 +419,19 @@ export const History: React.FC = () => {
 const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ attendanceData, students }) => {
   const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = React.useState<number | null>(null);
-  
+
   // Agrupar dados por mês
   const getMonthlyData = () => {
     const monthlyData: Record<string, any> = {};
-    
+
     attendanceData.forEach(record => {
       const date = new Date(record.date);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      
+      const year = date.getUTCFullYear();  // Mude para getUTCFullYear
+      const month = date.getUTCMonth();
+
       if (year === selectedYear) {
         const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
-        
+
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = {
             month: month,
@@ -443,15 +444,15 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
             days: []
           };
         }
-        
+
         monthlyData[monthKey].records.push(record);
         monthlyData[monthKey].totalClasses++;
         monthlyData[monthKey].totalPresent += record.students.filter((s: any) => s.isPresent).length;
         monthlyData[monthKey].totalAbsent += record.students.filter((s: any) => !s.isPresent).length;
-        monthlyData[monthKey].days.push(date.getDate());
+        monthlyData[monthKey].days.push(date.getUTCDate());
       }
     });
-    
+
     // Calcular taxa de presença
     Object.keys(monthlyData).forEach(key => {
       const data = monthlyData[key];
@@ -459,36 +460,36 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
       data.attendanceRate = totalStudentDays > 0 ? Math.round((data.totalPresent / totalStudentDays) * 100) : 0;
       data.days.sort((a: number, b: number) => a - b);
     });
-    
+
     return monthlyData;
   };
-  
+
   // Obter estatísticas de alunos por mês
   const getMonthlyStudentStats = (monthIndex: number) => {
     const monthKey = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}`;
     const monthData = getMonthlyData()[monthKey];
-    
+
     if (!monthData) return [];
-    
+
     const studentStats = students.map(student => {
       let totalClasses = 0;
       let presentClasses = 0;
       const attendanceDays: { day: number, isPresent: boolean }[] = [];
-      
+
       monthData.records.forEach((record: any) => {
         const studentAttendance = record.students.find((s: any) => s.id === student.id);
         if (studentAttendance) {
           totalClasses++;
-          const day = new Date(record.date).getDate();
+          const day = new Date(record.date).getUTCDate();
           attendanceDays.push({ day, isPresent: studentAttendance.isPresent });
           if (studentAttendance.isPresent) {
             presentClasses++;
           }
         }
       });
-      
+
       const attendanceRate = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
-      
+
       return {
         ...student,
         totalClasses,
@@ -499,19 +500,19 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
       };
     }).filter(student => student.totalClasses > 0)
       .sort((a, b) => b.attendanceRate - a.attendanceRate);
-    
+
     return studentStats;
   };
-  
+
   const handleDownloadMonthlyPDF = (monthIndex: number) => {
     const monthName = months[monthIndex];
     const studentStats = getMonthlyStudentStats(monthIndex);
     const monthData = getMonthlyData()[`${selectedYear}-${monthIndex.toString().padStart(2, '0')}`];
-    
+
     if (!monthData || studentStats.length === 0) {
       return;
     }
-    
+
     generateMonthlyPDF({
       month: monthName,
       year: selectedYear,
@@ -519,7 +520,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
       monthData
     });
   };
-  
+
   const getBeltColor = (belt: string) => {
     const colors: Record<string, string> = {
       'branca': 'bg-white text-gray-900 border border-gray-300',
@@ -534,15 +535,15 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
     };
     return colors[belt.toLowerCase()] || 'bg-gray-100 text-gray-800';
   };
-  
+
   const monthlyData = getMonthlyData();
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
-  
-  const availableYears = [...new Set(attendanceData.map(record => new Date(record.date).getFullYear()))].sort((a, b) => b - a);
-  
+
+  const availableYears = [...new Set(attendanceData.map(record => new Date(record.date).getUTCFullYear()))].sort((a, b) => b - a);
+
   if (attendanceData.length === 0) {
     return (
       <div className="text-center py-12">
@@ -556,14 +557,14 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Modal de detalhes do mês */}
       {selectedMonth !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <MonthDetailModal 
+            <MonthDetailModal
               month={months[selectedMonth]}
               year={selectedYear}
               studentStats={getMonthlyStudentStats(selectedMonth)}
@@ -575,7 +576,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
           </div>
         </div>
       )}
-      
+
       {/* Seletor de Ano */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -591,16 +592,16 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
           ))}
         </select>
       </div>
-      
+
       {/* Grid de Meses */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {months.map((monthName, monthIndex) => {
           const monthKey = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}`;
           const data = monthlyData[monthKey];
-          
+
           return (
-            <Card 
-              key={monthIndex} 
+            <Card
+              key={monthIndex}
               className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
               onClick={() => data && setSelectedMonth(monthIndex)}
             >
@@ -609,7 +610,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
                   <span className="text-gray-900 dark:text-gray-100">{monthName}</span>
                   {data && (
                     <div className="flex items-center space-x-2">
-                      <Badge 
+                      <Badge
                         variant={data.attendanceRate >= 80 ? "default" : data.attendanceRate >= 60 ? "secondary" : "destructive"}
                         className="text-xs"
                       >
@@ -630,7 +631,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
                   )}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="pt-0">
                 {data ? (
                   <div className="space-y-4">
@@ -655,12 +656,12 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
                         <div className="text-xs text-gray-600 dark:text-gray-400">Faltas</div>
                       </div>
                     </div>
-                    
+
                     {/* Barra de Progresso */}
                     <div>
                       <Progress value={data.attendanceRate} className="h-2" />
                     </div>
-                    
+
                     {/* Dias com Aula */}
                     <div>
                       <h4 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -690,7 +691,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
           );
         })}
       </div>
-      
+
       {/* Resumo Anual */}
       {Object.keys(monthlyData).length > 0 && (
         <Card className="dark:bg-gray-800 dark:border-gray-700">
@@ -743,7 +744,7 @@ const MonthDetailModal: React.FC<{
   onDownloadPDF: () => void;
   getBeltColor: (belt: string) => string;
 }> = ({ month, year, studentStats, monthData, onClose, onDownloadPDF, getBeltColor }) => {
-  
+
   if (!monthData || studentStats.length === 0) {
     return (
       <div className="p-4 sm:p-6">
@@ -759,7 +760,7 @@ const MonthDetailModal: React.FC<{
       </div>
     );
   }
-  
+
   return (
     <div className="p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
       {/* Header */}
@@ -782,7 +783,7 @@ const MonthDetailModal: React.FC<{
           </Button>
         </div>
       </div>
-      
+
       {/* Resumo do Mês */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-center">
@@ -810,13 +811,13 @@ const MonthDetailModal: React.FC<{
           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Taxa de Presença</div>
         </div>
       </div>
-      
+
       {/* Ranking de Alunos */}
       <div className="space-y-4">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Ranking de Presença dos Alunos
         </h3>
-        
+
         <div className="space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
           {studentStats.map((student, index) => (
             <Card key={student.id} className="p-3 sm:p-4">
@@ -842,7 +843,7 @@ const MonthDetailModal: React.FC<{
                     </Badge>
                   </div>
                 </div>
-                
+
                 {/* Estatísticas */}
                 <div className="flex flex-col sm:items-end space-y-2">
                   <div className="flex items-center justify-between sm:justify-end space-x-4 text-xs sm:text-sm">
@@ -856,7 +857,7 @@ const MonthDetailModal: React.FC<{
                   <Progress value={student.attendanceRate} className="w-full sm:w-32 h-2" />
                 </div>
               </div>
-              
+
               {/* Dias de Presença */}
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -866,11 +867,10 @@ const MonthDetailModal: React.FC<{
                   {student.attendanceDays.map((attendance: any, dayIndex: number) => (
                     <div
                       key={dayIndex}
-                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-medium ${
-                        attendance.isPresent
+                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-medium ${attendance.isPresent
                           ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                      }`}
+                        }`}
                       title={`Dia ${attendance.day}: ${attendance.isPresent ? 'Presente' : 'Ausente'}`}
                     >
                       {attendance.day}

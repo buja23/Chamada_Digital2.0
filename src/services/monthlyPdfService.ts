@@ -58,7 +58,7 @@ export const generateMonthlyPDF = (data: MonthlyPDFData) => {
     data.monthData.days.forEach((day: number) => {
       const attendance = student.attendanceDays.find((att: any) => att.day === day);
       if (attendance) {
-        row.push(attendance.isPresent ? '✓' : '✗');
+        row.push(attendance.isPresent ? 'P' : 'F');
       } else {
         row.push('-'); // Não havia aula neste dia para este aluno
       }
@@ -79,7 +79,7 @@ export const generateMonthlyPDF = (data: MonthlyPDFData) => {
   };
   
   // Colunas dos dias (dinâmicas)
-  data.monthData.days.forEach((day: number, index: number) => {
+  data.monthData.days.forEach((_day: number, index: number) => {
     columnStyles[3 + index] = { cellWidth: 8, halign: 'center', fontSize: 8 };
   });
   
@@ -111,10 +111,10 @@ export const generateMonthlyPDF = (data: MonthlyPDFData) => {
     didParseCell: function (data) {
       // Colorir células de presença
       if (data.row.index >= 0 && data.column.index >= 3 && data.column.index < totalIndex) {
-        if (data.cell.text[0] === '✓') {
+        if (data.cell.text[0] === 'P') {
           data.cell.styles.textColor = [34, 197, 94]; // Verde para presente
           data.cell.styles.fontStyle = 'bold';
-        } else if (data.cell.text[0] === '✗') {
+        } else if (data.cell.text[0] === 'F') {
           data.cell.styles.textColor = [239, 68, 68]; // Vermelho para ausente
           data.cell.styles.fontStyle = 'bold';
         }
@@ -139,7 +139,7 @@ export const generateMonthlyPDF = (data: MonthlyPDFData) => {
   const finalY = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text('Legenda: ✓ = Presente | ✗ = Ausente | - = Sem aula registrada', 20, finalY);
+  doc.text('Legenda: P = Presente | F = Ausente | - = Sem aula registrada', 20, finalY);
   doc.text('Cores: Verde ≥80% | Amarelo ≥60% | Vermelho <60%', 20, finalY + 8);
   
   // Save the PDF
