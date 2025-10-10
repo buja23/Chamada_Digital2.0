@@ -28,21 +28,31 @@ export const Attendance: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
     const attendanceData = students.map(student => ({
       id: student.id,
       name: student.name,
       isPresent: attendance[student.id] || false
     }));
 
-    await createAttendance.mutateAsync({
-      date: selectedDate,
-      students: attendanceData,
-      notes: notes.trim() || undefined
-    });
+    try {
+      // Tenta executar a mutação
+      await createAttendance.mutateAsync({
+        date: selectedDate,
+        students: attendanceData,
+        notes: notes.trim() || ""
+      });
 
-    // Redirecionar para histórico
-    navigate('/history');
+      // Só navega para o histórico se a mutação for bem-sucedida
+      navigate('/history');
+
+    } catch (error) {
+      // O erro é capturado aqui
+      console.error("Falha ao registrar a chamada:", error);
+      // A mensagem de erro "Erro ao registrar chamada..." que você vê
+      // provavelmente já está sendo exibida pelo hook `useCreateAttendance` (ex: via toast).
+      // Se não estiver, você poderia adicionar um alerta ou notificação aqui.
+    }
   };
 
   const presentCount = Object.values(attendance).filter(Boolean).length;
