@@ -30,7 +30,7 @@ export const StudentCheckbox: React.FC<StudentCheckboxProps> = ({
   onChange,
 }) => {
   return (
-    <div className="flex items-center space-x-3 p-2 sm:p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+    <div className="flex items-center space-x-3 p-2 sm:p-3 rounded-lg border hover:bg-accent transition-colors">
       <Checkbox
         id={student.id}
         checked={isPresent}
