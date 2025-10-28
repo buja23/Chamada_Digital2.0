@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,8 @@ import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, 
 import { generateAttendancePDF } from '@/services/pdfService';
 import { generateMonthlyPDF } from '@/services/monthlyPdfService';
 
+
+// HISTORY Componente
 export const History: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -51,7 +53,8 @@ export const History: React.FC = () => {
   };
 
   // Calcular estatísticas individuais dos alunos
-  const getStudentStats = () => {
+  // Por enquanto pode deixar
+  const studentStats = useMemo(() => {
     const stats = students.map(student => {
       let totalClasses = 0;
       let presentClasses = 0;
@@ -65,6 +68,7 @@ export const History: React.FC = () => {
           }
         }
       });
+
 
       const attendanceRate = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
       const absentClasses = totalClasses - presentClasses;
@@ -80,9 +84,7 @@ export const History: React.FC = () => {
 
     // Ordenar por taxa de presença (maior para menor)
     return stats.sort((a, b) => b.attendanceRate - a.attendanceRate);
-  };
-
-  const studentStats = getStudentStats();
+  }, [students, attendanceData]);
 
   const getBeltColor = (belt: string) => {
     const colors: Record<string, string> = {
@@ -183,6 +185,7 @@ export const History: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
 
       <Tabs defaultValue="history" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -408,21 +411,25 @@ export const History: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="monthly" className="space-y-6">
-          <MonthlyStats attendanceData={attendanceData} students={students} />
+          <MonthlyStats attendanceData={attendanceData} students={students} getBeltColor={getBeltColor} />
         </TabsContent>
       </Tabs>
     </div>
   );
 };
 
-// Componente de Estatísticas Mensais
-const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ attendanceData, students }) => {
+// Componente de Estatísticas Mensais 
+const MonthlyStats: React.FC<{
+  attendanceData: any[],
+  students: any[],
+  getBeltColor: (belt: string) => string
+}> = ({ attendanceData, students, getBeltColor }) => {
   const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = React.useState<number | null>(null);
 
   // Agrupar dados por mês
-  const getMonthlyData = () => {
-    const monthlyData: Record<string, any> = {};
+  const monthlyData = useMemo(() => {
+    const monthlyDataRecord: Record<string, any> = {};
 
     attendanceData.forEach(record => {
       const date = new Date(record.date);
@@ -432,8 +439,8 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
       if (year === selectedYear) {
         const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
 
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = {
+        if (!monthlyDataRecord[monthKey]) {
+          monthlyDataRecord[monthKey] = {
             month: month,
             year: year,
             records: [],
@@ -445,29 +452,29 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
           };
         }
 
-        monthlyData[monthKey].records.push(record);
-        monthlyData[monthKey].totalClasses++;
-        monthlyData[monthKey].totalPresent += record.students.filter((s: any) => s.isPresent).length;
-        monthlyData[monthKey].totalAbsent += record.students.filter((s: any) => !s.isPresent).length;
-        monthlyData[monthKey].days.push(date.getUTCDate());
+        monthlyDataRecord[monthKey].records.push(record);
+        monthlyDataRecord[monthKey].totalClasses++;
+        monthlyDataRecord[monthKey].totalPresent += record.students.filter((s: any) => s.isPresent).length;
+        monthlyDataRecord[monthKey].totalAbsent += record.students.filter((s: any) => !s.isPresent).length;
+        monthlyDataRecord[monthKey].days.push(date.getUTCDate());
       }
     });
 
     // Calcular taxa de presença
-    Object.keys(monthlyData).forEach(key => {
-      const data = monthlyData[key];
+    Object.keys(monthlyDataRecord).forEach(key => {
+      const data = monthlyDataRecord[key];
       const totalStudentDays = data.totalPresent + data.totalAbsent;
       data.attendanceRate = totalStudentDays > 0 ? Math.round((data.totalPresent / totalStudentDays) * 100) : 0;
       data.days.sort((a: number, b: number) => a - b);
     });
 
-    return monthlyData;
-  };
+    return monthlyDataRecord;
+  }, [selectedYear, attendanceData]);
 
   // Obter estatísticas de alunos por mês
   const getMonthlyStudentStats = (monthIndex: number) => {
     const monthKey = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}`;
-    const monthData = getMonthlyData()[monthKey];
+    const monthData = monthlyData[monthKey];
 
     if (!monthData) return [];
 
@@ -478,13 +485,14 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
 
       monthData.records.forEach((record: any) => {
         const studentAttendance = record.students.find((s: any) => s.id === student.id);
-        if (studentAttendance) {
-          totalClasses++;
-          const day = new Date(record.date).getUTCDate();
-          attendanceDays.push({ day, isPresent: studentAttendance.isPresent });
-          if (studentAttendance.isPresent) {
-            presentClasses++;
-          }
+        if (!studentAttendance) {
+          return;
+        }
+        totalClasses++;
+        const day = new Date(record.date).getUTCDate();
+        attendanceDays.push({ day, isPresent: studentAttendance.isPresent });
+        if (studentAttendance.isPresent) {
+          presentClasses++;
         }
       });
 
@@ -507,7 +515,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
   const handleDownloadMonthlyPDF = (monthIndex: number) => {
     const monthName = months[monthIndex];
     const studentStats = getMonthlyStudentStats(monthIndex);
-    const monthData = getMonthlyData()[`${selectedYear}-${monthIndex.toString().padStart(2, '0')}`];
+    const monthData = monthlyData[`${selectedYear}-${monthIndex.toString().padStart(2, '0')}`];
 
     if (!monthData || studentStats.length === 0) {
       return;
@@ -521,22 +529,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
     });
   };
 
-  const getBeltColor = (belt: string) => {
-    const colors: Record<string, string> = {
-      'branca': 'bg-white text-gray-900 border border-gray-300',
-      'cinza': 'bg-gray-500 text-white',
-      'amarela': 'bg-yellow-100 text-yellow-800',
-      'laranja': 'bg-orange-100 text-orange-800',
-      'verde': 'bg-green-100 text-green-800',
-      'azul': 'bg-blue-100 text-blue-800',
-      'roxa': 'bg-purple-500 text-white',
-      'marrom': 'bg-amber-700 text-white',
-      'preta': 'bg-black text-white',
-    };
-    return colors[belt.toLowerCase()] || 'bg-gray-100 text-gray-800';
-  };
-
-  const monthlyData = getMonthlyData();
+  
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -568,7 +561,7 @@ const MonthlyStats: React.FC<{ attendanceData: any[], students: any[] }> = ({ at
               month={months[selectedMonth]}
               year={selectedYear}
               studentStats={getMonthlyStudentStats(selectedMonth)}
-              monthData={getMonthlyData()[`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`]}
+              monthData={monthlyData[`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`]}
               onClose={() => setSelectedMonth(null)}
               onDownloadPDF={() => handleDownloadMonthlyPDF(selectedMonth)}
               getBeltColor={getBeltColor}
@@ -868,8 +861,8 @@ const MonthDetailModal: React.FC<{
                     <div
                       key={dayIndex}
                       className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-medium ${attendance.isPresent
-                          ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                         }`}
                       title={`Dia ${attendance.day}: ${attendance.isPresent ? 'Presente' : 'Ausente'}`}
                     >
