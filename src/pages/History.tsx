@@ -8,9 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAttendance, useAttendanceByDateRange } from '@/hooks/useAttendance';
 import { useStudents } from '@/hooks/useStudents';
-import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User, BarChart3, FileDown } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User, BarChart3, } from 'lucide-react';
 import { generateAttendancePDF } from '@/services/pdfService';
-import { generateMonthlyPDF } from '@/services/monthlyPdfService';
 import { MonthlyStats } from '../components/History/MonthlyStats';
 
 
