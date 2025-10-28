@@ -31,3 +31,28 @@ export interface CreateAttendanceData {
   students: StudentAttendance[];
   notes?: string;
 }
+
+export type StudentStats = { // Tipo base que você talvez já tenha
+  id: string;
+  name: string;
+  belt: string;
+  totalClasses: number;
+  presentClasses: number;
+  absentClasses: number;
+  attendanceRate: number;
+};
+
+export type MonthlyStudentStats = StudentStats & { // Estende StudentStats
+  attendanceDays: { day: number; isPresent: boolean }[];
+};
+
+export type MonthlyData = {
+  month: number;
+  year: number;
+  records: AttendanceRecord[]; // Reutilize o tipo que você já tem
+  totalClasses: number;
+  totalPresent: number;
+  totalAbsent: number;
+  attendanceRate: number;
+  days: number[];
+};
