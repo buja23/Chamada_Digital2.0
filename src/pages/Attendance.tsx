@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Importando Tabs
 import { StudentCheckbox } from '@/components/attendance/StudentCheckbox';
 import { useStudents } from '@/hooks/useStudents';
 import { useCreateAttendance } from '@/hooks/useAttendance';
@@ -21,6 +22,18 @@ export const Attendance: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
 
+  // Estado para controlar qual lista estamos vendo (Principal ou Novos)
+  const [activeTab, setActiveTab] = useState<'regular' | 'trial'>('regular');
+
+  // Filtra os alunos baseado na aba selecionada
+  const filteredStudents = useMemo(() => {
+    return students.filter(student => {
+      // Se o aluno não tiver categoria (antigo), assume que é regular
+      const category = student.category || 'regular';
+      return category === activeTab;
+    });
+  }, [students, activeTab]);
+
   const handleAttendanceChange = (studentId: string, isPresent: boolean) => {
     setAttendance(prev => ({
       ...prev,
@@ -28,35 +41,32 @@ export const Attendance: React.FC = () => {
     }));
   };
 
- const handleSubmit = async () => {
-    const attendanceData = students.map(student => ({
+  const handleSubmit = async () => {
+    // Registra presença APENAS dos alunos da lista atual
+    const attendanceData = filteredStudents.map(student => ({
       id: student.id,
       name: student.name,
       isPresent: attendance[student.id] || false
     }));
 
     try {
-      // Tenta executar a mutação
       await createAttendance.mutateAsync({
         date: selectedDate,
         students: attendanceData,
-        notes: notes.trim() || ""
+        // Adiciona uma nota automática indicando qual lista foi usada
+        notes: `${notes} [Lista: ${activeTab === 'regular' ? 'Principal' : 'Novos'}]`.trim()
       });
 
-      // Só navega para o histórico se a mutação for bem-sucedida
       navigate('/history');
 
     } catch (error) {
-      // O erro é capturado aqui
       console.error("Falha ao registrar a chamada:", error);
-      // A mensagem de erro "Erro ao registrar chamada..." que você vê
-      // provavelmente já está sendo exibida pelo hook `useCreateAttendance` (ex: via toast).
-      // Se não estiver, você poderia adicionar um alerta ou notificação aqui.
     }
   };
 
-  const presentCount = Object.values(attendance).filter(Boolean).length;
-  const totalCount = students.length;
+  // Cálculos baseados apenas na lista filtrada
+  const presentCount = filteredStudents.filter(s => attendance[s.id]).length;
+  const totalCount = filteredStudents.length;
 
   if (isLoading) {
     return (
@@ -101,12 +111,22 @@ export const Attendance: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Abas para alternar entre as listas */}
+          <Tabs defaultValue="regular" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="regular">Chamada Principal</TabsTrigger>
+              <TabsTrigger value="trial">Alunos Novos (Experimental)</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 text-lg">
                 <div className="flex items-center space-x-2">
                   <Users className="h-5 w-5" />
-                  <span>Lista de Presença</span>
+                  <span>
+                    {activeTab === 'regular' ? 'Lista Principal' : 'Lista de Novos'}
+                  </span>
                 </div>
                 <div className="text-sm font-normal text-gray-600 sm:text-right">
                   {presentCount}/{totalCount} presentes
@@ -114,19 +134,21 @@ export const Attendance: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {students.length === 0 ? (
+              {filteredStudents.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-600">
-                    Nenhum aluno cadastrado. 
-                    <Button variant="link" onClick={() => navigate('/register')} className="p-1">
-                      Cadastre o primeiro aluno
-                    </Button>
+                    Nenhum aluno nesta lista. 
+                    {activeTab === 'trial' && (
+                      <Button variant="link" onClick={() => navigate('/register')} className="p-1">
+                        Cadastrar novo aluno
+                      </Button>
+                    )}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2 lg:space-y-3">
-                  {students.map((student) => (
+                  {filteredStudents.map((student) => (
                     <StudentCheckbox
                       key={student.id}
                       student={student}
@@ -145,7 +167,9 @@ export const Attendance: React.FC = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Resumo</CardTitle>
+              <CardTitle className="text-lg">
+                Resumo ({activeTab === 'regular' ? 'Principal' : 'Novos'})
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
@@ -189,7 +213,7 @@ export const Attendance: React.FC = () => {
           <Button 
             onClick={handleSubmit} 
             className="w-full py-3"
-            disabled={createAttendance.isPending || students.length === 0}
+            disabled={createAttendance.isPending || filteredStudents.length === 0}
           >
             {createAttendance.isPending ? 'Salvando...' : 'Registrar Chamada'}
           </Button>

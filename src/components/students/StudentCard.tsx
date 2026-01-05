@@ -3,8 +3,9 @@ import { Student } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit } from 'lucide-react';
-import { useDeleteStudent } from '@/hooks/useStudents';
+import { Trash2, Edit, UserCheck } from 'lucide-react'; // Adicionado UserCheck
+import { useDeleteStudent, useUpdateStudent } from '@/hooks/useStudents'; // Adicionado useUpdateStudent
+import { toast } from 'sonner'; // Adicionado toast
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,13 +53,38 @@ const calculateAge = (birthdate: string) => {
 
 export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => {
   const deleteStudent = useDeleteStudent();
+  const updateStudent = useUpdateStudent(); // Hook para atualizar dados
 
   const handleDelete = () => {
     deleteStudent.mutate(student.id);
   };
 
+  // Função para efetivar o aluno (mudar de 'trial' para 'regular')
+  const handlePromote = async () => {
+    try {
+      await updateStudent.mutateAsync({
+        id: student.id,
+        data: { category: 'regular' }
+      });
+      toast.success(`${student.name} foi efetivado para a turma principal!`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao efetivar aluno.");
+    }
+  };
+
+  // Verifica se o aluno é experimental
+  const isTrial = student.category === 'trial';
+
   return (
-    <Card className="hover:shadow-md transition-shadow w-full">
+    <Card className="hover:shadow-md transition-shadow w-full relative overflow-hidden">
+      {/* Etiqueta visual para alunos em teste */}
+      {isTrial && (
+        <div className="absolute top-0 right-0 bg-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-bl font-bold z-10">
+          Em Teste
+        </div>
+      )}
+
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
           <h3 className="font-semibold text-base sm:text-lg truncate">{student.name}</h3>
@@ -66,12 +92,25 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => 
         </div>
         
         <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+          {/* Botão de Efetivar - Só aparece se for aluno novo (trial) */}
+          {isTrial && (
+             <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePromote}
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 h-8 w-8 p-0"
+              title="Efetivar Aluno (Mover para Principal)"
+            >
+              <UserCheck className="h-4 w-4" />
+            </Button>
+          )}
+
           {onEdit && (
             <Button
               variant="ghost"
               size="sm" 
               onClick={() => onEdit(student)}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -79,7 +118,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => 
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>

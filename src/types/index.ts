@@ -56,3 +56,25 @@ export type MonthlyData = {
   attendanceRate: number;
   days: number[];
 };
+
+
+
+export type StudentCategory = 'regular' | 'trial';
+
+export interface Student {
+  id: string;
+  name: string;
+  birthdate: string;
+  belt: string;
+  registrationDate: string;
+  category?: StudentCategory; // Novo campo (opcional para manter compatibilidade com antigos)
+}
+
+export interface CreateStudentData {
+  name: string;
+  birthdate: string;
+  belt: string;
+  category: StudentCategory; // Novo campo
+}
+
+// ... restante dos tipos
