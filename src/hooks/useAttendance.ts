@@ -34,3 +34,18 @@ export const useCreateAttendance = () => {
     }
   });
 };
+
+export const useDeleteAttendance = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => attendanceService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      toast.success('Chamada excluída com sucesso!');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir chamada.');
+    }
+  });
+};

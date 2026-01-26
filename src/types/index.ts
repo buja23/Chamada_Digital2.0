@@ -1,17 +1,24 @@
+// src/types/index.ts
+
+// 1. Definimos as categorias disponíveis
+export type StudentCategory = 'regular' | 'trial' | 'morning' | 'afternoon';
+
+// 2. Interface do Aluno atualizada com a categoria
 export interface Student {
   id: string;
   name: string;
   birthdate: string;
   belt: string;
   registrationDate: string;
+  category?: StudentCategory; // Opcional para manter compatibilidade
 }
 
-export interface AttendanceRecord {
-  id: string;
-  date: string;
-  students: StudentAttendance[];
-  notes?: string;
-  createdAt: string;
+// 3. Interface para criação (Categoria é obrigatória aqui)
+export interface CreateStudentData {
+  name: string;
+  birthdate: string;
+  belt: string;
+  category: StudentCategory;
 }
 
 export interface StudentAttendance {
@@ -20,10 +27,12 @@ export interface StudentAttendance {
   isPresent: boolean;
 }
 
-export interface CreateStudentData {
-  name: string;
-  birthdate: string;
-  belt: string;
+export interface AttendanceRecord {
+  id: string;
+  date: string;
+  students: StudentAttendance[];
+  notes?: string;
+  createdAt: string; // Garanta que seu backend/firebase está salvando isso
 }
 
 export interface CreateAttendanceData {
@@ -32,7 +41,7 @@ export interface CreateAttendanceData {
   notes?: string;
 }
 
-export type StudentStats = { // Tipo base que você talvez já tenha
+export type StudentStats = {
   id: string;
   name: string;
   belt: string;
@@ -42,39 +51,17 @@ export type StudentStats = { // Tipo base que você talvez já tenha
   attendanceRate: number;
 };
 
-export type MonthlyStudentStats = StudentStats & { // Estende StudentStats
+export type MonthlyStudentStats = StudentStats & {
   attendanceDays: { day: number; isPresent: boolean }[];
 };
 
 export type MonthlyData = {
   month: number;
   year: number;
-  records: AttendanceRecord[]; // Reutilize o tipo que você já tem
+  records: AttendanceRecord[];
   totalClasses: number;
   totalPresent: number;
   totalAbsent: number;
   attendanceRate: number;
   days: number[];
 };
-
-
-
-export type StudentCategory = 'regular' | 'trial';
-
-export interface Student {
-  id: string;
-  name: string;
-  birthdate: string;
-  belt: string;
-  registrationDate: string;
-  category?: StudentCategory; // Novo campo (opcional para manter compatibilidade com antigos)
-}
-
-export interface CreateStudentData {
-  name: string;
-  birthdate: string;
-  belt: string;
-  category: StudentCategory; // Novo campo
-}
-
-// ... restante dos tipos

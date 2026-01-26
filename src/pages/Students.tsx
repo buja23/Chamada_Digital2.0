@@ -4,20 +4,35 @@ import { Input } from '@/components/ui/input';
 import { StudentCard } from '@/components/students/StudentCard';
 import { StudentForm } from '@/components/students/StudentForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Importando abas
 import { useStudents } from '@/hooks/useStudents';
 import { Student } from '@/types';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, Sun, Sunset, Moon, ClipboardList, LayoutGrid } from 'lucide-react';
 
 export const Students: React.FC = () => {
   const { data: students = [], isLoading } = useStudents();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Estado para controlar a aba ativa (Padrão: 'all' para ver todos)
+  const [activeTab, setActiveTab] = useState('all');
 
-  const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.belt.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = students.filter(student => {
+    // 1. Filtro de Texto (Nome ou Faixa)
+    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.belt.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // 2. Filtro de Categoria (Abas)
+    // Se a aba for 'all', aceita tudo.
+    // Se não, verifica se a categoria bate. Se o aluno não tiver categoria, assume 'regular' (Noite).
+    const studentCategory = student.category || 'regular';
+    const matchesCategory = activeTab === 'all' 
+      ? true 
+      : studentCategory === activeTab;
+
+    return matchesSearch && matchesCategory;
+  });
 
   const handleEditStudent = (student: Student) => {
     setEditingStudent(student);
@@ -47,7 +62,10 @@ export const Students: React.FC = () => {
           <Users className="h-8 w-8 text-red-600" />
           <div>
             <h1 className="text-3xl font-bold">Alunos</h1>
-            <p className="text-gray-600 dark:text-gray-400">{students.length} alunos cadastrados</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {filteredStudents.length} alunos encontrados
+              {activeTab !== 'all' && <span className="text-xs ml-1 opacity-70">(filtrado)</span>}
+            </p>
           </div>
         </div>
 
@@ -72,6 +90,27 @@ export const Students: React.FC = () => {
         </Dialog>
       </div>
 
+      {/* ABAS DE FILTRO POR TURMA */}
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1">
+          <TabsTrigger value="all" className="py-2">
+            <LayoutGrid className="w-4 h-4 mr-2" /> Todos
+          </TabsTrigger>
+          <TabsTrigger value="morning" className="py-2">
+            <Sun className="w-4 h-4 mr-2 text-orange-500" /> Manhã
+          </TabsTrigger>
+          <TabsTrigger value="afternoon" className="py-2">
+            <Sunset className="w-4 h-4 mr-2 text-blue-400" /> Tarde
+          </TabsTrigger>
+          <TabsTrigger value="regular" className="py-2">
+            <Moon className="w-4 h-4 mr-2 text-indigo-600" /> Noite
+          </TabsTrigger>
+          <TabsTrigger value="trial" className="py-2">
+            <ClipboardList className="w-4 h-4 mr-2 text-yellow-600" /> Em Teste
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <Input
@@ -86,15 +125,15 @@ export const Students: React.FC = () => {
         <div className="text-center py-12">
           <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'Nenhum aluno encontrado' : 'Nenhum aluno cadastrado'}
+            Nenhum aluno encontrado
           </h3>
           <p className="text-gray-600 mb-4">
             {searchTerm 
               ? 'Tente ajustar os termos de busca.'
-              : 'Comece cadastrando seu primeiro aluno.'
+              : 'Não há alunos nesta categoria.'
             }
           </p>
-          {!searchTerm && (
+          {!searchTerm && activeTab === 'all' && (
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Cadastrar Primeiro Aluno

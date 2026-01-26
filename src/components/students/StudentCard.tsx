@@ -3,9 +3,9 @@ import { Student } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit, UserCheck } from 'lucide-react'; // Adicionado UserCheck
-import { useDeleteStudent, useUpdateStudent } from '@/hooks/useStudents'; // Adicionado useUpdateStudent
-import { toast } from 'sonner'; // Adicionado toast
+import { Trash2, Edit, UserCheck } from 'lucide-react';
+import { useDeleteStudent, useUpdateStudent } from '@/hooks/useStudents';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,15 +53,15 @@ const calculateAge = (birthdate: string) => {
 
 export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => {
   const deleteStudent = useDeleteStudent();
-  const updateStudent = useUpdateStudent(); // Hook para atualizar dados
+  const updateStudent = useUpdateStudent();
 
   const handleDelete = () => {
     deleteStudent.mutate(student.id);
   };
 
-  // Função para efetivar o aluno (mudar de 'trial' para 'regular')
   const handlePromote = async () => {
     try {
+      // Promove para 'regular' (Principal/Noite) por padrão
       await updateStudent.mutateAsync({
         id: student.id,
         data: { category: 'regular' }
@@ -73,21 +73,33 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit }) => 
     }
   };
 
-  // Verifica se o aluno é experimental
+  // Configuração visual das categorias
+  const categoryLabels = {
+    trial: { text: 'Em Teste', color: 'bg-yellow-500' },
+    morning: { text: 'Manhã', color: 'bg-orange-400' },
+    afternoon: { text: 'Tarde', color: 'bg-blue-400' },
+    regular: null // Não mostramos etiqueta para a turma padrão
+  };
+
+  const categoryInfo = student.category ? categoryLabels[student.category] : null;
+  
+  // CORREÇÃO: Definimos explicitamente se é 'trial' para usar na lógica do botão
   const isTrial = student.category === 'trial';
 
   return (
     <Card className="hover:shadow-md transition-shadow w-full relative overflow-hidden">
-      {/* Etiqueta visual para alunos em teste */}
-      {isTrial && (
-        <div className="absolute top-0 right-0 bg-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-bl font-bold z-10">
-          Em Teste
+      {/* Etiqueta de Categoria (Mostra para Novos, Manhã e Tarde) */}
+      {categoryInfo && (
+        <div className={`absolute top-0 right-0 ${categoryInfo.color} text-white text-[10px] px-2 py-0.5 rounded-bl font-bold z-10`}>
+          {categoryInfo.text}
         </div>
       )}
 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div>
-          <h3 className="font-semibold text-base sm:text-lg truncate">{student.name}</h3>
+        <div className="max-w-[70%]">
+          <h3 className="font-semibold text-base sm:text-lg truncate" title={student.name}>
+            {student.name}
+          </h3>
           <p className="text-xs sm:text-sm text-gray-600">{calculateAge(student.birthdate)} anos</p>
         </div>
         

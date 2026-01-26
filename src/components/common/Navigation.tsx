@@ -6,8 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ThemeToggle } from './ThemeToggle';
 import { 
   Users, 
-  ClipboardCheck, 
-  MousePointerClick, 
+  ClipboardCheck,  
   History, 
   UserPlus, 
   LogOut,
@@ -18,7 +17,6 @@ import {
 const navigation = [
   { name: 'Alunos', href: '/students', icon: Users },
   { name: 'Chamada', href: '/attendance', icon: ClipboardCheck },
-  { name: 'Chamada Interativa', href: '/interactive-attendance', icon: MousePointerClick },
   { name: 'Histórico', href: '/history', icon: History },
   { name: 'Cadastrar Aluno', href: '/register', icon: UserPlus },
 ];

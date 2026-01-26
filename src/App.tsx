@@ -8,7 +8,6 @@ import { Layout } from '@/components/common/Layout';
 import { Login } from '@/pages/Login';
 import { Students } from '@/pages/Students';
 import { Attendance } from '@/pages/Attendance';
-import { InteractiveAttendance } from '@/pages/InteractiveAttendance';
 import { History } from '@/pages/History';
 import { Register } from '@/pages/Register';
 import { NotFound } from '@/pages/NotFound';
@@ -39,7 +38,6 @@ function App() {
                 <Route index element={<Navigate to="/students" replace />} />
                 <Route path="students" element={<Students />} />
                 <Route path="attendance" element={<Attendance />} />
-                <Route path="interactive-attendance" element={<InteractiveAttendance />} />
                 <Route path="history" element={<History />} />
                 <Route path="register" element={<Register />} />
               </Route>

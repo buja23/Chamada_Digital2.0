@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Importe o RadioGroup
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Student } from '@/types';
 import { useCreateStudent, useUpdateStudent } from '@/hooks/useStudents';
 
-// Atualizamos o schema para incluir a categoria
+// Schema atualizado com as novas categorias
 const studentSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   birthdate: z.string().min(1, 'Data de nascimento é obrigatória'),
   belt: z.string().min(1, 'Faixa é obrigatória'),
-  category: z.enum(['regular', 'trial']).default('trial'), // Novo campo
+  category: z.enum(['regular', 'trial', 'morning', 'afternoon']).default('trial'),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -26,15 +26,8 @@ interface StudentFormProps {
 }
 
 const beltOptions = [
-  'Branca',
-  'Cinza',
-  'Amarela',
-  'Laranja',
-  'Verde',
-  'Azul',
-  'Roxa',
-  'Marrom',
-  'Preta'
+  'Branca', 'Cinza', 'Amarela', 'Laranja', 
+  'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'
 ];
 
 export const StudentForm: React.FC<StudentFormProps> = ({ student, onSuccess }) => {
@@ -54,13 +47,12 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSuccess }) 
       name: student?.name || '',
       birthdate: student?.birthdate || '',
       belt: student?.belt || '',
-      // Se estiver editando, usa o valor existente, senão "trial" (Experimental)
-      category: student?.category || 'trial', 
+      category: student?.category || 'trial',
     }
   });
 
   const selectedBelt = watch('belt');
-  const selectedCategory = watch('category'); // Observa a categoria selecionada
+  const selectedCategory = watch('category');
 
   const onSubmit = async (data: StudentFormData) => {
     if (student) {
@@ -76,77 +68,56 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSuccess }) 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Campo de Nome */}
+      {/* Campos de Nome e Data (iguais) */}
       <div className="space-y-2">
         <Label htmlFor="name">Nome completo</Label>
-        <Input
-          id="name"
-          {...register('name')}
-          placeholder="Digite o nome do aluno"
-        />
-        {errors.name && (
-          <p className="text-sm text-red-600">{errors.name.message}</p>
-        )}
+        <Input id="name" {...register('name')} placeholder="Digite o nome" />
+        {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
       </div>
 
-      {/* Campo de Data de Nascimento */}
       <div className="space-y-2">
         <Label htmlFor="birthdate">Data de nascimento</Label>
-        <Input
-          id="birthdate"
-          type="date"
-          {...register('birthdate')}
-        />
-        {errors.birthdate && (
-          <p className="text-sm text-red-600">{errors.birthdate.message}</p>
-        )}
+        <Input id="birthdate" type="date" {...register('birthdate')} />
+        {errors.birthdate && <p className="text-sm text-red-600">{errors.birthdate.message}</p>}
       </div>
 
-      {/* Novo Campo: Tipo de Matrícula */}
+      {/* SELEÇÃO DE TURMA ATUALIZADA */}
       <div className="space-y-3 pt-2">
-        <Label>Tipo de Matrícula</Label>
+        <Label>Turma / Categoria</Label>
         <RadioGroup 
           defaultValue={selectedCategory} 
-          onValueChange={(value) => setValue('category', value as 'regular' | 'trial')}
-          className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4"
+          onValueChange={(value) => setValue('category', value as any)}
+          className="grid grid-cols-2 gap-2"
         >
-          <div className="flex items-center space-x-2 border p-3 rounded-md cursor-pointer hover:bg-gray-50 transition-colors flex-1">
-            <RadioGroupItem value="trial" id="r-trial" />
-            <Label htmlFor="r-trial" className="cursor-pointer font-normal">
-              Aluno Novo <span className="text-xs text-gray-500 block">(Experimental)</span>
-            </Label>
-          </div>
-          
-          <div className="flex items-center space-x-2 border p-3 rounded-md cursor-pointer hover:bg-gray-50 transition-colors flex-1">
+          <div className="flex items-center space-x-2 border p-3 rounded-md cursor-pointer hover:bg-gray-50 [&:has(:checked)]:bg-blue-50 [&:has(:checked)]:border-blue-200">
             <RadioGroupItem value="regular" id="r-regular" />
-            <Label htmlFor="r-regular" className="cursor-pointer font-normal">
-              Matriculado <span className="text-xs text-gray-500 block">(Principal)</span>
-            </Label>
+            <Label htmlFor="r-regular" className="cursor-pointer">Principal (Noite)</Label>
+          </div>
+          <div className="flex items-center space-x-2 border p-3 rounded-md cursor-pointer hover:bg-gray-50 [&:has(:checked)]:bg-blue-50 [&:has(:checked)]:border-blue-200">
+            <RadioGroupItem value="morning" id="r-morning" />
+            <Label htmlFor="r-morning" className="cursor-pointer">Manhã</Label>
+          </div>
+          <div className="flex items-center space-x-2 border p-3 rounded-md cursor-pointer hover:bg-gray-50 [&:has(:checked)]:bg-blue-50 [&:has(:checked)]:border-blue-200">
+            <RadioGroupItem value="afternoon" id="r-afternoon" />
+            <Label htmlFor="r-afternoon" className="cursor-pointer">Tarde</Label>
+          </div>
+          <div className="flex items-center space-x-2 border p-3 rounded-md cursor-pointer hover:bg-gray-50 [&:has(:checked)]:bg-yellow-50 [&:has(:checked)]:border-yellow-200">
+            <RadioGroupItem value="trial" id="r-trial" />
+            <Label htmlFor="r-trial" className="cursor-pointer">Experimental (Novos)</Label>
           </div>
         </RadioGroup>
-        {errors.category && (
-          <p className="text-sm text-red-600">{errors.category.message}</p>
-        )}
       </div>
 
-      {/* Campo de Faixa */}
+      {/* Campo de Faixa e Botão (iguais) */}
       <div className="space-y-2">
         <Label>Faixa</Label>
         <Select value={selectedBelt} onValueChange={(value) => setValue('belt', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a faixa" />
-          </SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="Selecione a faixa" /></SelectTrigger>
           <SelectContent>
-            {beltOptions.map((belt) => (
-              <SelectItem key={belt} value={belt}>
-                {belt}
-              </SelectItem>
-            ))}
+            {beltOptions.map((belt) => <SelectItem key={belt} value={belt}>{belt}</SelectItem>)}
           </SelectContent>
         </Select>
-        {errors.belt && (
-          <p className="text-sm text-red-600">{errors.belt.message}</p>
-        )}
+        {errors.belt && <p className="text-sm text-red-600">{errors.belt.message}</p>}
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

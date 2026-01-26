@@ -3,23 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { useAttendance, useAttendanceByDateRange } from '@/hooks/useAttendance';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAttendance, useAttendanceByDateRange, useDeleteAttendance } from '@/hooks/useAttendance';
 import { useStudents } from '@/hooks/useStudents';
-import { History as HistoryIcon, Calendar, Users, Search, Download, TrendingUp, User, BarChart3, } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Download, TrendingUp, BarChart3, Filter } from 'lucide-react';
 import { generateAttendancePDF } from '@/services/pdfService';
+
+// Importação dos Componentes Separados
 import { MonthlyStats } from '../components/History/MonthlyStats';
+import { AttendanceHistoryList } from '../components/History/AttendanceHistoryList';
+import { StudentStatsList } from '../components/History/StudentStatsList';
 
-
-// HISTORY
 export const History: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showFilter, setShowFilter] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  // Use filtered query if dates are provided, otherwise use all attendance
+  const deleteAttendance = useDeleteAttendance(); // Hook de Delete
+
   const {
     data: filteredAttendance,
     isLoading: isFilterLoading
@@ -32,49 +35,74 @@ export const History: React.FC = () => {
 
   const { data: students = [] } = useStudents();
 
-  const attendanceData = (startDate && endDate) ? (filteredAttendance || []) : allAttendance;
+  // Lógica de unificação e filtro dos dados
+  const rawData = (startDate && endDate) ? (filteredAttendance || []) : allAttendance;
+
+  const attendanceData = useMemo(() => {
+    if (categoryFilter === 'all') return rawData;
+
+    const filterMap: Record<string, string> = {
+      'morning': 'Manhã',
+      'afternoon': 'Tarde',
+      'regular': 'Principal',
+      'trial': 'Novos'
+    };
+
+    const term = filterMap[categoryFilter];
+    return rawData.filter(record => record.notes && record.notes.includes(term));
+  }, [rawData, categoryFilter]);
+
   const isLoading = (startDate && endDate) ? isFilterLoading : isAllLoading;
 
   const clearFilter = () => {
     setStartDate('');
     setEndDate('');
+    setCategoryFilter('all');
   };
 
   const handleDownloadPDF = () => {
-    if (attendanceData.length === 0) {
-      return;
-    }
+    if (attendanceData.length === 0) return;
     generateAttendancePDF(attendanceData);
   };
 
-  const getAttendanceRate = (students: any[]) => {
-    const presentCount = students.filter(s => s.isPresent).length;
-    return students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0;
+  // Função passada para o componente filho
+  const handleDelete = (id: string) => {
+    deleteAttendance.mutate(id);
   };
 
-  // Calcular estatísticas individuais dos alunos
-  // Por enquanto pode deixar
+  // Lógica de Estatísticas Individuais
+ // Lógica de Estatísticas Individuais (ATUALIZADA)
   const studentStats = useMemo(() => {
-    const stats = students.map(student => {
+    // 1. Primeiro filtramos a LISTA DE ALUNOS baseado na categoria selecionada
+    const filteredStudentsList = students.filter(student => {
+      if (categoryFilter === 'all') return true;
+      // Se o aluno não tem categoria, assume 'regular' (Noite)
+      const studentCat = student.category || 'regular';
+      return studentCat === categoryFilter;
+    });
+
+    // 2. Agora calculamos as estatísticas apenas para os alunos filtrados
+    const stats = filteredStudentsList.map(student => {
       let totalClasses = 0;
       let presentClasses = 0;
 
+      // Nota: As estatísticas são calculadas com base no 'attendanceData' que JÁ ESTÁ filtrado.
+      // Isso significa que se você filtrar "Manhã", você verá:
+      // - Apenas alunos da Manhã
+      // - Apenas a presença deles nas aulas da Manhã (porque attendanceData também filtrou)
       attendanceData.forEach(record => {
         const studentAttendance = record.students.find(s => s.id === student.id);
         if (studentAttendance) {
           totalClasses++;
-          if (studentAttendance.isPresent) {
-            presentClasses++;
-          }
+          if (studentAttendance.isPresent) presentClasses++;
         }
       });
-
 
       const attendanceRate = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
       const absentClasses = totalClasses - presentClasses;
 
       return {
-        ...student,
+        ...student, // Espalha as propriedades do aluno (incluindo category)
         totalClasses,
         presentClasses,
         absentClasses,
@@ -82,9 +110,19 @@ export const History: React.FC = () => {
       };
     });
 
-    // Ordenar por taxa de presença (maior para menor)
     return stats.sort((a, b) => b.attendanceRate - a.attendanceRate);
-  }, [students, attendanceData]);
+  }, [students, attendanceData, categoryFilter]); // Adicionado categoryFilter na dependência
+
+  // ... (resto do código igual: isLoading, return, Tabs...)
+
+  // No TabsContent de 'stats', passe a lista atualizada:
+  /* <TabsContent value="stats" className="space-y-6">
+        <StudentStatsList 
+        stats={studentStats}
+        onNavigateToRegister={() => window.location.href = '/register'}
+        />
+    </TabsContent> 
+  */
 
   const getBeltColor = (belt: string) => {
     const colors: Record<string, string> = {
@@ -104,318 +142,110 @@ export const History: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando histórico...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Carregando histórico...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-2">
           <HistoryIcon className="h-8 w-8 text-red-600" />
           <div>
-            <h1 className="text-3xl font-bold">Histórico de Chamadas</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {attendanceData.length} registros encontrados
+            <h1 className="text-3xl font-bold">Histórico</h1>
+            <p className="text-gray-600 text-sm">
+              {attendanceData.length} registros
+              {categoryFilter !== 'all' && <span className="ml-1 font-medium text-red-600">(Filtrado)</span>}
             </p>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleDownloadPDF}
-            disabled={attendanceData.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Baixar PDF
+          <Button variant="outline" onClick={handleDownloadPDF} disabled={attendanceData.length === 0}>
+            <Download className="h-4 w-4 mr-2" /> PDF
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowFilter(!showFilter)}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            Filtrar por Data
+          <Button variant={showFilter ? "secondary" : "outline"} onClick={() => setShowFilter(!showFilter)}>
+            <Filter className="h-4 w-4 mr-2" /> Filtros
           </Button>
         </div>
       </div>
 
+      {/* Painel de Filtros */}
       {showFilter && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtrar por Período</CardTitle>
+        <Card className="bg-gray-50/50 border-dashed">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">Opções de Filtragem</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate" className="text-sm">Data inicial</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
+                <Label>Data Inicial</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="endDate" className="text-sm">Data final</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
+                <Label>Data Final</Label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
-
-              <div className="flex items-end gap-2 sm:flex-col sm:items-stretch">
-                <Button
-                  variant="outline"
-                  onClick={clearFilter}
-                  disabled={!startDate && !endDate}
-                  className="w-full"
-                >
-                  Limpar
-                </Button>
+              <div className="space-y-2">
+                <Label>Turma / Horário</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as turmas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as turmas</SelectItem>
+                    <SelectItem value="morning">Manhã</SelectItem>
+                    <SelectItem value="afternoon">Tarde</SelectItem>
+                    <SelectItem value="regular">Noite (Principal)</SelectItem>
+                    <SelectItem value="trial">Novos (Experimental)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+               <Button variant="ghost" size="sm" onClick={clearFilter} className="text-gray-500 hover:text-red-600">
+                 Limpar Filtros
+               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-
+      {/* Abas */}
       <Tabs defaultValue="history" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Histórico de</span> Chamadas
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Estatísticas</span> Individuais
-          </TabsTrigger>
-          <TabsTrigger value="monthly" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Estatísticas</span> Mensais
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="history"><Calendar className="h-4 w-4 mr-2"/> Chamadas</TabsTrigger>
+          <TabsTrigger value="stats"><TrendingUp className="h-4 w-4 mr-2"/> Alunos</TabsTrigger>
+          <TabsTrigger value="monthly"><BarChart3 className="h-4 w-4 mr-2"/> Mensal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="history" className="space-y-6">
-          {attendanceData.length === 0 ? (
-            <div className="text-center py-12">
-              <HistoryIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Nenhum registro encontrado
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {(startDate && endDate)
-                  ? 'Não há chamadas no período selecionado.'
-                  : 'Ainda não foram registradas chamadas.'
-                }
-              </p>
-              {(!startDate && !endDate) && (
-                <Button onClick={() => window.location.href = '/attendance'} className="w-full sm:w-auto">
-                  Registrar Primeira Chamada
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid gap-6">
-              {attendanceData.map((record) => {
-                const attendanceRate = getAttendanceRate(record.students);
-                const presentCount = record.students.filter(s => s.isPresent).length;
-
-                return (
-                  <Card key={record.id}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                      <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
-                        <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">
-                          <Calendar className="h-5 w-5 text-red-600" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-base sm:text-lg">
-                            {new Date(record.date).toLocaleDateString('pt-BR', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              timeZone: 'UTC'
-                            })}
-                          </CardTitle>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                            Registrado em {new Date(record.createdAt).toLocaleString('pt-BR')}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-                        <div className="text-right">
-                          <div className="text-sm sm:text-lg font-semibold">
-                            {presentCount}/{record.students.length}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">presentes</div>
-                        </div>
-
-                        <Badge
-                          variant={attendanceRate >= 80 ? "default" : attendanceRate >= 60 ? "secondary" : "destructive"}
-                        >
-                          {attendanceRate}%
-                        </Badge>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent>
-                      {record.notes && (
-                        <div className="mb-4 p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                          <p className="text-sm text-gray-700 dark:text-gray-300">
-                            <strong>Observações:</strong> {record.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 flex items-center text-sm sm:text-base">
-                            <Users className="h-4 w-4 mr-1" />
-                            Presentes ({record.students.filter(s => s.isPresent).length})
-                          </h4>
-                          <div className="space-y-1 max-h-24 sm:max-h-32 overflow-y-auto">
-                            {record.students
-                              .filter(student => student.isPresent)
-                              .map(student => (
-                                <div key={student.id} className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate">
-                                  {student.name}
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="font-medium text-gray-700 dark:text-gray-400 mb-2 flex items-center text-sm sm:text-base">
-                            <Users className="h-4 w-4 mr-1" />
-                            Ausentes ({record.students.filter(s => !s.isPresent).length})
-                          </h4>
-                          <div className="space-y-1 max-h-24 sm:max-h-32 overflow-y-auto">
-                            {record.students
-                              .filter(student => !student.isPresent)
-                              .map(student => (
-                                <div key={student.id} className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate">
-                                  {student.name}
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
+          <AttendanceHistoryList 
+            data={attendanceData} 
+            hasFilter={!!(startDate && endDate)}
+            onNavigateToAttendance={() => window.location.href = '/attendance'}
+            onDelete={handleDelete}
+          />
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-6">
-          {studentStats.length === 0 ? (
-            <div className="text-center py-12">
-              <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                Nenhum aluno cadastrado
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Cadastre alunos para ver as estatísticas de presença.
-              </p>
-              <Button onClick={() => window.location.href = '/register'} className="w-full sm:w-auto">
-                Cadastrar Primeiro Aluno
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="grid gap-4">
-                {studentStats.map((student) => (
-                  <Card key={student.id}>
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-lg sm:text-xl font-bold text-red-600">
-                              {student.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-base sm:text-lg truncate">{student.name}</h3>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Badge className={`${getBeltColor(student.belt)} text-xs`}>
-                                {student.belt}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col sm:items-end space-y-2">
-                          <div className="flex items-center space-x-4">
-                            <div className="text-center">
-                              <div className="text-lg sm:text-2xl font-bold text-red-600">
-                                {student.attendanceRate}%
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">presença</div>
-                            </div>
-                          </div>
-
-                          <div className="w-full sm:w-48">
-                            <Progress
-                              value={student.attendanceRate}
-                              className="h-2"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-center">
-                          <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
-                            {student.totalClasses}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                            Total de Aulas
-                          </div>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="text-lg sm:text-xl font-semibold text-red-600">
-                            {student.presentClasses}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                            Presenças
-                          </div>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-400">
-                            {student.absentClasses}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                            Faltas
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
+          <StudentStatsList 
+            stats={studentStats}
+            onNavigateToRegister={() => window.location.href = '/register'}
+          />
         </TabsContent>
 
         <TabsContent value="monthly" className="space-y-6">
-          <MonthlyStats attendanceData={attendanceData} students={students} getBeltColor={getBeltColor} />
+          <MonthlyStats 
+            attendanceData={attendanceData} 
+            students={students} 
+            getBeltColor={getBeltColor} 
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
 };
-
-

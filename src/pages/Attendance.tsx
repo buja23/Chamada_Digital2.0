@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Importando Tabs
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentCheckbox } from '@/components/attendance/StudentCheckbox';
 import { useStudents } from '@/hooks/useStudents';
 import { useCreateAttendance } from '@/hooks/useAttendance';
-import { ClipboardCheck, Calendar, Users } from 'lucide-react';
+import { ClipboardCheck, Calendar, Users, Sun, Sunset, Moon, ClipboardList } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Attendance: React.FC = () => {
@@ -22,13 +22,13 @@ export const Attendance: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
 
-  // Estado para controlar qual lista estamos vendo (Principal ou Novos)
-  const [activeTab, setActiveTab] = useState<'regular' | 'trial'>('regular');
+  // Estado para controlar qual lista estamos vendo (Agora com 4 opções)
+  const [activeTab, setActiveTab] = useState<'regular' | 'trial' | 'morning' | 'afternoon'>('regular');
 
   // Filtra os alunos baseado na aba selecionada
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      // Se o aluno não tiver categoria (antigo), assume que é regular
+      // Se o aluno não tiver categoria (antigo), assume que é regular (Noite)
       const category = student.category || 'regular';
       return category === activeTab;
     });
@@ -49,12 +49,20 @@ export const Attendance: React.FC = () => {
       isPresent: attendance[student.id] || false
     }));
 
+    // Mapa de nomes para salvar na observação
+    const listNames: Record<string, string> = {
+      regular: 'Principal (Noite)',
+      morning: 'Manhã',
+      afternoon: 'Tarde',
+      trial: 'Novos (Experimental)'
+    };
+
     try {
       await createAttendance.mutateAsync({
         date: selectedDate,
         students: attendanceData,
         // Adiciona uma nota automática indicando qual lista foi usada
-        notes: `${notes} [Lista: ${activeTab === 'regular' ? 'Principal' : 'Novos'}]`.trim()
+        notes: `${notes} [Lista: ${listNames[activeTab]}]`.trim()
       });
 
       navigate('/history');
@@ -111,11 +119,21 @@ export const Attendance: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Abas para alternar entre as listas */}
+          {/* Abas para alternar entre as 4 listas */}
           <Tabs defaultValue="regular" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="regular">Chamada Principal</TabsTrigger>
-              <TabsTrigger value="trial">Alunos Novos (Experimental)</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1">
+              <TabsTrigger value="morning" className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-900 py-2">
+                <Sun className="w-4 h-4 mr-2 text-orange-500" /> Manhã
+              </TabsTrigger>
+              <TabsTrigger value="afternoon" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 py-2">
+                <Sunset className="w-4 h-4 mr-2 text-blue-500" /> Tarde
+              </TabsTrigger>
+              <TabsTrigger value="regular" className="data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-900 py-2">
+                <Moon className="w-4 h-4 mr-2 text-indigo-500" /> Noite
+              </TabsTrigger>
+              <TabsTrigger value="trial" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-900 py-2">
+                <ClipboardList className="w-4 h-4 mr-2 text-yellow-600" /> Novos
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -124,8 +142,12 @@ export const Attendance: React.FC = () => {
               <CardTitle className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 text-lg">
                 <div className="flex items-center space-x-2">
                   <Users className="h-5 w-5" />
+                  {/* Título dinâmico baseado na aba */}
                   <span>
-                    {activeTab === 'regular' ? 'Lista Principal' : 'Lista de Novos'}
+                    {activeTab === 'regular' && 'Turma da Noite (Principal)'}
+                    {activeTab === 'morning' && 'Turma da Manhã'}
+                    {activeTab === 'afternoon' && 'Turma da Tarde'}
+                    {activeTab === 'trial' && 'Alunos em Teste'}
                   </span>
                 </div>
                 <div className="text-sm font-normal text-gray-600 sm:text-right">
@@ -137,14 +159,12 @@ export const Attendance: React.FC = () => {
               {filteredStudents.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">
-                    Nenhum aluno nesta lista. 
-                    {activeTab === 'trial' && (
-                      <Button variant="link" onClick={() => navigate('/register')} className="p-1">
-                        Cadastrar novo aluno
-                      </Button>
-                    )}
+                  <p className="text-gray-600 mb-4">
+                    Nenhum aluno nesta turma.
                   </p>
+                  <Button variant="outline" onClick={() => navigate('/students')} className="p-4">
+                    Gerenciar Alunos
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-2 lg:space-y-3">
@@ -168,7 +188,7 @@ export const Attendance: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">
-                Resumo ({activeTab === 'regular' ? 'Principal' : 'Novos'})
+                Resumo da Chamada
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
