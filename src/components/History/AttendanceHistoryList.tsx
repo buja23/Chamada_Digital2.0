@@ -44,7 +44,6 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
     return students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0;
   };
 
-  // Helper para ícones e cores
   const getClassInfo = (notes?: string) => {
     if (!notes) return { icon: Calendar, color: 'text-gray-500', bg: 'bg-gray-100', label: 'Geral', border: 'border-gray-200' };
     
@@ -86,16 +85,17 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
         const classInfo = getClassInfo(record.notes);
         const Icon = classInfo.icon;
 
-        // CORREÇÃO DE DATA: Adicionamos T12:00:00 para garantir que o fuso horário não mude o dia
-        const displayDate = new Date(record.date + 'T12:00:00');
+        // Correção do fuso horário para exibição
+        // Quebra a string "YYYY-MM-DD" e cria uma nova data com os valores locais
+        const [year, month, day] = record.date.split('-').map(Number);
+        const displayDate = new Date(year, month - 1, day);
 
         return (
           <Card key={record.id} className="hover:border-gray-400 transition-all dark:hover:border-gray-500">
             
-            {/* --- CABEÇALHO VISUAL NOVO --- */}
+            {/* --- CABEÇALHO VISUAL --- */}
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4 border-b dark:border-gray-800">
               <div className="flex items-center space-x-4">
-                {/* Ícone da Turma */}
                 <div className={`p-3 rounded-xl ${classInfo.bg} dark:bg-opacity-20`}>
                   <Icon className={`h-6 w-6 ${classInfo.color}`} />
                 </div>
@@ -105,7 +105,6 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
                     <CardTitle className="text-lg capitalize">
                       {displayDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </CardTitle>
-                    {/* Etiqueta da Turma */}
                     <Badge variant="outline" className={`${classInfo.color} ${classInfo.border} bg-transparent`}>
                       {classInfo.label}
                     </Badge>
@@ -130,7 +129,6 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
                   {attendanceRate}%
                 </Badge>
 
-                {/* Botão de Excluir */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
@@ -155,7 +153,7 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
               </div>
             </CardHeader>
 
-            {/* --- LISTA DE ALUNOS (MANTIDA IGUAL AO ORIGINAL) --- */}
+            {/* --- LISTA DE ALUNOS --- */}
             <CardContent className="pt-6">
               {record.notes && (
                 <div className="mb-4 p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -166,7 +164,6 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Presentes */}
                 <div>
                   <h4 className="font-medium text-green-700 dark:text-green-400 mb-2 flex items-center text-sm sm:text-base">
                     <Users className="h-4 w-4 mr-1" />
@@ -183,7 +180,6 @@ export const AttendanceHistoryList: React.FC<AttendanceHistoryListProps> = ({
                   </div>
                 </div>
 
-                {/* Ausentes */}
                 <div>
                   <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 flex items-center text-sm sm:text-base">
                     <Users className="h-4 w-4 mr-1" />

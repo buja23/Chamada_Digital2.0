@@ -16,19 +16,23 @@ export const Attendance: React.FC = () => {
   const { data: students = [], isLoading } = useStudents();
   const createAttendance = useCreateAttendance();
   
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  // Ajuste aqui para pegar a data local correta, evitando problemas com UTC
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    // Pega o ano, mês e dia locais e formata como YYYY-MM-DD
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+
   const [notes, setNotes] = useState('');
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
 
-  // Estado para controlar qual lista estamos vendo (Agora com 4 opções)
   const [activeTab, setActiveTab] = useState<'regular' | 'trial' | 'morning' | 'afternoon'>('regular');
 
-  // Filtra os alunos baseado na aba selecionada
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      // Se o aluno não tiver categoria (antigo), assume que é regular (Noite)
       const category = student.category || 'regular';
       return category === activeTab;
     });
@@ -42,14 +46,12 @@ export const Attendance: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // Registra presença APENAS dos alunos da lista atual
     const attendanceData = filteredStudents.map(student => ({
       id: student.id,
       name: student.name,
       isPresent: attendance[student.id] || false
     }));
 
-    // Mapa de nomes para salvar na observação
     const listNames: Record<string, string> = {
       regular: 'Principal (Noite)',
       morning: 'Manhã',
@@ -59,9 +61,8 @@ export const Attendance: React.FC = () => {
 
     try {
       await createAttendance.mutateAsync({
-        date: selectedDate,
+        date: selectedDate, // Envia a data selecionada no formato YYYY-MM-DD
         students: attendanceData,
-        // Adiciona uma nota automática indicando qual lista foi usada
         notes: `${notes} [Lista: ${listNames[activeTab]}]`.trim()
       });
 
@@ -72,7 +73,6 @@ export const Attendance: React.FC = () => {
     }
   };
 
-  // Cálculos baseados apenas na lista filtrada
   const presentCount = filteredStudents.filter(s => attendance[s.id]).length;
   const totalCount = filteredStudents.length;
 
@@ -119,7 +119,6 @@ export const Attendance: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Abas para alternar entre as 4 listas */}
           <Tabs defaultValue="regular" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1">
               <TabsTrigger value="morning" className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-900 py-2">
@@ -142,7 +141,6 @@ export const Attendance: React.FC = () => {
               <CardTitle className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 text-lg">
                 <div className="flex items-center space-x-2">
                   <Users className="h-5 w-5" />
-                  {/* Título dinâmico baseado na aba */}
                   <span>
                     {activeTab === 'regular' && 'Turma da Noite (Principal)'}
                     {activeTab === 'morning' && 'Turma da Manhã'}
