@@ -22,16 +22,15 @@ export const MonthlyStats: React.FC<{
     const monthlyDataRecord: Record<string, MonthlyData> = {};
 
     attendanceData.forEach(record => {
-      const date = new Date(record.date);
-      const year = date.getUTCFullYear();  // Mude para getUTCFullYear
-      const month = date.getUTCMonth();
+      // Usar split em vez de new Date para evitar bugs de fuso horário
+      const [year, month] = record.date.split('-').map(Number);
 
       if (year === selectedYear) {
-        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+        const monthKey = `${year}-${(month - 1).toString().padStart(2, '0')}`;
 
         if (!monthlyDataRecord[monthKey]) {
           monthlyDataRecord[monthKey] = {
-            month: month,
+            month: month - 1,
             year: year,
             records: [],
             totalClasses: 0,
@@ -43,10 +42,47 @@ export const MonthlyStats: React.FC<{
         }
 
         monthlyDataRecord[monthKey].records.push(record);
-        monthlyDataRecord[monthKey].totalClasses++;
-        monthlyDataRecord[monthKey].totalPresent += record.students.filter((s) => s.isPresent).length;
-        monthlyDataRecord[monthKey].totalAbsent += record.students.filter((s) => !s.isPresent).length;
-        monthlyDataRecord[monthKey].days.push(date.getUTCDate());
+
+        // Criar mapa para agrupar presenças por dia e ID do aluno
+        const dayStudentMap: Record<number, Record<string, boolean>> = {};
+        
+        monthlyDataRecord[monthKey].records.forEach(rec => {
+          const [, , recDay] = rec.date.split('-').map(Number);
+          if (!dayStudentMap[recDay]) {
+            dayStudentMap[recDay] = {};
+          }
+          rec.students.forEach(student => {
+            // Se o aluno estiver presente em qualquer chamada do dia, prevalece como true
+            dayStudentMap[recDay][student.id] = dayStudentMap[recDay][student.id] || student.isPresent;
+          });
+        });
+
+        // Adicionar dia ao array apenas se ainda não existir
+        Object.keys(dayStudentMap).forEach(dayKey => {
+          const dayNum = Number(dayKey);
+          if (!monthlyDataRecord[monthKey].days.includes(dayNum)) {
+            monthlyDataRecord[monthKey].days.push(dayNum);
+          }
+        });
+
+        // Recalcular totais baseado no mapa de agrupamento
+        monthlyDataRecord[monthKey].totalClasses = monthlyDataRecord[monthKey].days.length;
+        
+        let totalPresent = 0;
+        let totalAbsent = 0;
+        
+        Object.values(dayStudentMap).forEach(studentsInDay => {
+          Object.values(studentsInDay).forEach(isPresent => {
+            if (isPresent) {
+              totalPresent++;
+            } else {
+              totalAbsent++;
+            }
+          });
+        });
+        
+        monthlyDataRecord[monthKey].totalPresent = totalPresent;
+        monthlyDataRecord[monthKey].totalAbsent = totalAbsent;
       }
     });
 
@@ -69,23 +105,29 @@ export const MonthlyStats: React.FC<{
     if (!monthData) return [];
 
     const studentStats = students.map((student: Student) => {
-      let totalClasses = 0;
-      let presentClasses = 0;
-      const attendanceDays: { day: number, isPresent: boolean }[] = [];
+      // Criar mapa temporário agrupado por dia para evitar duplicatas
+      const attendanceDaysMap: Record<number, boolean> = {};
 
       monthData.records.forEach((record: AttendanceRecord) => {
         const studentAttendance = record.students.find((s) => s.id === student.id);
         if (!studentAttendance) {
           return;
         }
-        totalClasses++;
-        const day = new Date(record.date).getUTCDate();
-        attendanceDays.push({ day, isPresent: studentAttendance.isPresent });
-        if (studentAttendance.isPresent) {
-          presentClasses++;
-        }
+        
+        // Extrair o dia usando split em vez de new Date para evitar bugs de fuso horário
+        const [, , day] = record.date.split('-').map(Number);
+        
+        // Se a presença for true, prevalece sobre false
+        attendanceDaysMap[day] = attendanceDaysMap[day] || studentAttendance.isPresent;
       });
 
+      // Converter objeto de volta para array ordenado
+      const attendanceDays: { day: number, isPresent: boolean }[] = Object.entries(attendanceDaysMap)
+        .map(([day, isPresent]) => ({ day: Number(day), isPresent }))
+        .sort((a, b) => a.day - b.day);
+
+      const totalClasses = attendanceDays.length;
+      const presentClasses = attendanceDays.filter(d => d.isPresent).length;
       const attendanceRate = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
 
       return {
@@ -94,7 +136,7 @@ export const MonthlyStats: React.FC<{
         presentClasses,
         absentClasses: totalClasses - presentClasses,
         attendanceRate,
-        attendanceDays: attendanceDays.sort((a, b) => a.day - b.day)
+        attendanceDays
       } as MonthlyStudentStats;
     }).filter(student => student.totalClasses > 0)
       .sort((a, b) => b.attendanceRate - a.attendanceRate);
@@ -125,7 +167,10 @@ export const MonthlyStats: React.FC<{
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  const availableYears = [...new Set(attendanceData.map(record => new Date(record.date).getUTCFullYear()))].sort((a, b) => b - a);
+  const availableYears = [...new Set(attendanceData.map(record => {
+    const [year] = record.date.split('-').map(Number);
+    return year;
+  }))].sort((a, b) => b - a);
 
   if (attendanceData.length === 0) {
     return (
