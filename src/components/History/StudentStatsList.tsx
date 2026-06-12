@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,9 @@ import {
   Sun, 
   Moon, 
   Sunset, 
-  ClipboardList 
+  ClipboardList,
+  Search,
+  X
 } from 'lucide-react';
 import { StudentStats, StudentCategory } from '@/types';
 
@@ -26,6 +28,17 @@ export const StudentStatsList: React.FC<StudentStatsListProps> = ({
   stats, 
   onNavigateToRegister 
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtrar alunos baseado na busca por nome
+  const filteredStats = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return stats;
+    }
+    return stats.filter(student =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [stats, searchTerm]);
 
   const getBeltColor = (belt: string) => {
     const colors: Record<string, string> = {
@@ -71,8 +84,53 @@ export const StudentStatsList: React.FC<StudentStatsListProps> = ({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-      {stats.map((student) => {
+    <>
+      {/* Barra de Busca */}
+      <div className="mb-6 relative">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar aluno por nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            {filteredStats.length} aluno{filteredStats.length !== 1 ? 's' : ''} encontrado{filteredStats.length !== 1 ? 's' : ''}
+          </p>
+        )}
+      </div>
+
+      {/* Lista de Alunos ou Mensagem de Vazio */}
+      {filteredStats.length === 0 ? (
+        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+          <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            Nenhum aluno encontrado
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {searchTerm ? 'Nenhum aluno corresponde à sua busca.' : 'Tente ajustar os filtros ou cadastre novos alunos.'}
+          </p>
+          {!searchTerm && (
+            <Button onClick={onNavigateToRegister} className="w-full sm:w-auto">
+              Gerenciar Alunos
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          {filteredStats.map((student) => {
         const categoryInfo = getCategoryInfo(student.category);
         const CategoryIcon = categoryInfo.icon;
 
@@ -149,7 +207,9 @@ export const StudentStatsList: React.FC<StudentStatsListProps> = ({
             </CardContent>
           </Card>
         );
-      })}
-    </div>
+          })}
+        </div>
+      )}
+    </>
   );
 };

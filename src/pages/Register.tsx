@@ -2,8 +2,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StudentForm } from '@/components/students/StudentForm';
 import { UserPlus } from 'lucide-react';
+import { useStudents } from '@/hooks/useStudents';
 
 export const Register: React.FC = () => {
+  const { data: students = [] } = useStudents();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2">
@@ -20,7 +23,7 @@ export const Register: React.FC = () => {
             <CardTitle>Informações do Aluno</CardTitle>
           </CardHeader>
           <CardContent>
-            <StudentForm />
+            <StudentForm existingStudents={students} />
           </CardContent>
         </Card>
       </div>

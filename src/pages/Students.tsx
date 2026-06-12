@@ -85,6 +85,7 @@ export const Students: React.FC = () => {
             <StudentForm
               student={editingStudent}
               onSuccess={handleCloseDialog}
+              existingStudents={students}
             />
           </DialogContent>
         </Dialog>

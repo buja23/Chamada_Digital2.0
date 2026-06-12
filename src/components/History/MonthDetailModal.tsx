@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card'; // Adicione CardContent se usar
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { FileDown } from 'lucide-react';
+import { FileDown, Search, X } from 'lucide-react';
 import type { MonthlyStudentStats, MonthlyData } from '../../types/index';
 
 
@@ -18,6 +18,17 @@ export const MonthDetailModal: React.FC<{
   onDownloadPDF: () => void;
   getBeltColor: (belt: string) => string;
 }> = ({ month, year, studentStats, monthData, onClose, onDownloadPDF, getBeltColor }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtrar alunos baseado na busca por nome
+  const filteredStudentStats = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return studentStats;
+    }
+    return studentStats.filter(student =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [studentStats, searchTerm]);
 
   if (!monthData || studentStats.length === 0) {
     return (
@@ -88,12 +99,46 @@ export const MonthDetailModal: React.FC<{
 
       {/* Ranking de Alunos */}
       <div className="space-y-4">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Ranking de Presença dos Alunos
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Ranking de Presença dos Alunos
+          </h3>
+          {filteredStudentStats.length !== studentStats.length && (
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              {filteredStudentStats.length} de {studentStats.length}
+            </span>
+          )}
+        </div>
 
-        <div className="space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
-          {studentStats.map((student, index) => (
+        {/* Barra de Busca */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar aluno por nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {filteredStudentStats.length === 0 ? (
+          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+            <p className="text-sm">
+              {searchTerm ? 'Nenhum aluno corresponde à sua busca.' : 'Nenhum aluno encontrado.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
+          {filteredStudentStats.map((student, index) => (
             <Card key={student.id} className="p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 {/* Info do Aluno */}
@@ -154,7 +199,8 @@ export const MonthDetailModal: React.FC<{
               </div>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
