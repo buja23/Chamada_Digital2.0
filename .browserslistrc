@@ -1,0 +1,6 @@
+# Browserlist — define quais navegadores o projeto suporta
+# Usado pelo Autoprefixer e @vitejs/plugin-legacy
+
+defaults
+not IE 11
+not op_mini all
